@@ -33,14 +33,15 @@ npx expo start --tunnel
 ## هيكل المشروع
 
 ```
-App.tsx                         تحميل الخط (Tajawal مضمّن) + SafeAreaProvider
+App.tsx                         تحميل الخط (Tajawal مضمّن) + التبديل بين شاشة البداية واللعبة
 src/
   types/question.ts             نوع Question المشترك + PlayableQuestion
   data/questions.ts             بنك الأسئلة المحلي (خارج JSX)
   data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
   game/gameReducer.ts           حالات اللعبة: answering → feedback → results
   game/useTriviaGame.ts         hook يربط الـ reducer بالشاشة
-  screens/GameScreen.tsx        الشاشة الوحيدة (لعب + نتيجة)
+  screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئة + ابدأ التحدّي)
+  screens/GameScreen.tsx        شاشة اللعب (لعب + نتيجة)
   components/                   المكوّنات القابلة لإعادة الاستخدام
   theme/theme.ts                الألوان والخطوط والمسافات واتجاه النص
 ```
@@ -53,10 +54,11 @@ src/
 | `AnswerButton` | `src/components/AnswerButton.tsx` | `GameScreen` — الأزرار الأربعة |
 | `ScoreBadge` | `src/components/ScoreBadge.tsx` | `GameScreen` — الهيدر (ظاهر دائمًا) |
 | `FeedbackBanner` | `src/components/FeedbackBanner.tsx` | `GameScreen` — صح عليك! / مو هذي الإجابة |
-| `PrimaryButton` | `src/components/PrimaryButton.tsx` | `GameScreen` (التالي / شوف النتيجة) و `ResultsPanel` |
+| `PrimaryButton` | `src/components/PrimaryButton.tsx` | `WelcomeScreen` (ابدأ التحدّي)، `GameScreen` (التالي / شوف النتيجة)، `ResultsPanel` |
 | `ResultsPanel` | `src/components/ResultsPanel.tsx` | `GameScreen` — حالة النتيجة |
-| `CategoryBadge` | `src/components/CategoryBadge.tsx` | `GameScreen` — شارة الفئة |
-| `GeometricBackground` | `src/components/GeometricBackground.tsx` | `GameScreen` — خلفية زخرفية |
+| `CategoryBadge` | `src/components/CategoryBadge.tsx` | `WelcomeScreen` و `GameScreen` — شارة الفئة |
+| `ScreenLayout` | `src/components/ScreenLayout.tsx` | `WelcomeScreen` و `GameScreen` — المساحات الآمنة، التمرير، عمود RTL |
+| `GeometricBackground` | `src/components/GeometricBackground.tsx` | `ScreenLayout` — خلفية زخرفية |
 
 ## ملاحظات تصميمية
 
@@ -68,6 +70,7 @@ src/
 
 ## اختبار الهاتف
 
+0. يفتح التطبيق على شاشة البداية؛ «ابدأ التحدّي» يدخلك اللعبة والنقاط صفر.
 1. العب الأسئلة الخمسة؛ النقاط تزيد فقط مع الإجابة الصحيحة.
 2. اضغط على الإجابات بسرعة؛ تُقبل إجابة واحدة فقط لكل سؤال.
 3. تأكد أن النتيجة النهائية تساوي عدد الإجابات الصحيحة.

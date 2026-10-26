@@ -1,14 +1,15 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '../theme/theme';
 
 type CategoryBadgeProps = {
   label: string;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function CategoryBadge({ label }: CategoryBadgeProps) {
+export function CategoryBadge({ label, style }: CategoryBadgeProps) {
   return (
-    <View style={styles.badge}>
+    <View style={[styles.badge, style]}>
       <Text style={styles.text}>{label}</Text>
     </View>
   );
