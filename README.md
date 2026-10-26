@@ -1,0 +1,75 @@
+# تحدّي اليمعة — Trivia on Your Phone
+
+لعبة أسئلة فردية بالعربي (فئة **معلومات عامة / General Knowledge**)، مبنية بـ
+React Native + Expo (SDK 58) + TypeScript، وتشتغل على Expo Go (iOS / Android) وعلى الويب عبر React Native Web.
+
+## التشغيل
+
+المتطلبات: Node.js 20+ وتطبيق **Expo Go** (آخر إصدار يدعم SDK 58) على الهاتف، والهاتف واللابتوب على نفس الـ Wi‑Fi.
+
+```bash
+npm install
+npx expo start
+```
+
+امسح رمز QR بكاميرا الآيفون أو من داخل Expo Go على أندرويد.
+إذا ما اشتغل الاتصال عبر الشبكة المحلية:
+
+```bash
+npx expo start --tunnel
+```
+
+## الأوامر
+
+| الأمر | الوظيفة |
+| --- | --- |
+| `npm start` | تشغيل خادم Expo لـ Expo Go |
+| `npm run web` | تشغيل نسخة الويب محليًا |
+| `npm test` | اختبارات منطق اللعبة (Jest + jest-expo) |
+| `npm run typecheck` | فحص TypeScript |
+| `npm run lint` | ESLint (eslint-config-expo) |
+| `npm run export:web` | بناء نسخة الويب في `dist/` |
+
+## هيكل المشروع
+
+```
+App.tsx                         تحميل الخط (Tajawal مضمّن) + SafeAreaProvider
+src/
+  types/question.ts             نوع Question المشترك + PlayableQuestion
+  data/questions.ts             بنك الأسئلة المحلي (خارج JSX)
+  data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
+  game/gameReducer.ts           حالات اللعبة: answering → feedback → results
+  game/useTriviaGame.ts         hook يربط الـ reducer بالشاشة
+  screens/GameScreen.tsx        الشاشة الوحيدة (لعب + نتيجة)
+  components/                   المكوّنات القابلة لإعادة الاستخدام
+  theme/theme.ts                الألوان والخطوط والمسافات واتجاه النص
+```
+
+### المكوّنات
+
+| المكوّن | الملف | مكان الاستخدام |
+| --- | --- | --- |
+| `QuestionCard` | `src/components/QuestionCard.tsx` | `GameScreen` — بطاقة السؤال |
+| `AnswerButton` | `src/components/AnswerButton.tsx` | `GameScreen` — الأزرار الأربعة |
+| `ScoreBadge` | `src/components/ScoreBadge.tsx` | `GameScreen` — الهيدر (ظاهر دائمًا) |
+| `FeedbackBanner` | `src/components/FeedbackBanner.tsx` | `GameScreen` — صح عليك! / مو هذي الإجابة |
+| `PrimaryButton` | `src/components/PrimaryButton.tsx` | `GameScreen` (التالي / شوف النتيجة) و `ResultsPanel` |
+| `ResultsPanel` | `src/components/ResultsPanel.tsx` | `GameScreen` — حالة النتيجة |
+| `CategoryBadge` | `src/components/CategoryBadge.tsx` | `GameScreen` — شارة الفئة |
+| `GeometricBackground` | `src/components/GeometricBackground.tsx` | `GameScreen` — خلفية زخرفية |
+
+## ملاحظات تصميمية
+
+- **الصحّة بالمعرّف لا بالموقع:** كل إجابة لها `id` ثابت، والإجابة الصحيحة تُعرف بـ `correctOptionId`.
+- **قفل الإجابة:** الـ reducer يقبل أول `answer` فقط في حالة `answering`؛ أي ضغطات سريعة بعدها تُتجاهل.
+- **RTL محصور بالشاشة:** `direction: 'rtl'` على native و `dir="rtl"` على الويب — بدون `I18nManager.forceRTL`.
+  اتجاه نص السؤال والإجابات يتحدد من `language` لكل سؤال، فالأسئلة الإنجليزية مستقبلًا تظهر LTR.
+- **الخط:** Tajawal (رخصة OFL) مضمّن من `@expo-google-fonts/tajawal`؛ لا يوجد طلب خط من الإنترنت وقت التشغيل.
+
+## اختبار الهاتف
+
+1. العب الأسئلة الخمسة؛ النقاط تزيد فقط مع الإجابة الصحيحة.
+2. اضغط على الإجابات بسرعة؛ تُقبل إجابة واحدة فقط لكل سؤال.
+3. تأكد أن النتيجة النهائية تساوي عدد الإجابات الصحيحة.
+4. اضغط «العب مرة ثانية»؛ كل شي يرجع للبداية والنقاط صفر.
+5. تأكد أن العربي واضح، والأزرار مريحة، وما في نص مقصوص.
