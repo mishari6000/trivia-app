@@ -1,0 +1,90 @@
+import { getLocalQuestions } from '../../data/getLocalQuestions';
+import { questions as questionBank } from '../../data/questions';
+import { createInitialState, gameReducer } from '../gameReducer';
+import { prepareSession, shuffle, type RandomSource } from '../shuffle';
+
+/** Deterministic random source (mulberry32) so tests never depend on luck. */
+function seeded(seed: number): RandomSource {
+  let a = seed;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const sorted = <T>(items: T[]) => [...items].sort();
+
+describe('shuffle', () => {
+  it('returns a permutation and leaves the input untouched', () => {
+    const input = ['a', 'b', 'c', 'd'];
+    for (let seed = 1; seed <= 50; seed++) {
+      const result = shuffle(input, seeded(seed));
+      expect(sorted(result)).toEqual(input);
+      expect(input).toEqual(['a', 'b', 'c', 'd']);
+    }
+  });
+
+  it('follows Fisher-Yates exactly for a controlled random source', () => {
+    // random() = 0 always swaps with index 0: [a,b,c,d] -> [b,c,d,a]
+    expect(shuffle(['a', 'b', 'c', 'd'], () => 0)).toEqual(['b', 'c', 'd', 'a']);
+    // random() close to 1 always swaps an item with itself: order unchanged.
+    expect(shuffle(['a', 'b', 'c', 'd'], () => 0.999)).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  it('can produce all 24 orders of four answers', () => {
+    const seen = new Set<string>();
+    const random = seeded(42);
+    for (let i = 0; i < 2000; i++) seen.add(shuffle(['a', 'b', 'c', 'd'], random).join(''));
+    expect(seen.size).toBe(24);
+  });
+});
+
+describe('prepareSession', () => {
+  it('keeps four unique options and the correct answer identity', () => {
+    const source = getLocalQuestions();
+    const session = prepareSession(source, seeded(7));
+
+    session.forEach((question, i) => {
+      const original = source[i];
+      expect(question.id).toBe(original.id);
+      expect(question.options).toHaveLength(4);
+      expect(new Set(question.options.map((o) => o.id)).size).toBe(4);
+      expect(sorted(question.options.map((o) => o.id))).toEqual(
+        sorted(original.options.map((o) => o.id)),
+      );
+      expect(question.correctOptionId).toBe(original.correctOptionId);
+      const correct = question.options.find((o) => o.id === question.correctOptionId);
+      expect(correct?.text).toBe(questionBank[i].correctAnswer);
+    });
+  });
+
+  it('does not mutate the question bank or the source questions', () => {
+    const bankBefore = JSON.parse(JSON.stringify(questionBank));
+    const source = getLocalQuestions();
+    const sourceBefore = JSON.parse(JSON.stringify(source));
+
+    prepareSession(source, () => 0);
+
+    expect(questionBank).toEqual(bankBefore);
+    expect(source).toEqual(sourceBefore);
+  });
+
+  it('keeps the answer order stable while the game is played', () => {
+    const session = prepareSession(getLocalQuestions(), seeded(3));
+    const order = (s: ReturnType<typeof createInitialState>) =>
+      s.questions.map((q) => q.options.map((o) => o.id).join(','));
+
+    let state = createInitialState(session);
+    const initialOrder = order(state);
+    for (let i = 0; i < session.length; i++) {
+      const q = state.questions[state.currentIndex];
+      state = gameReducer(state, { type: 'answer', optionId: q.options[0].id });
+      expect(order(state)).toEqual(initialOrder);
+      state = gameReducer(state, { type: 'next' });
+      expect(order(state)).toEqual(initialOrder);
+    }
+    expect(state.phase).toBe('results');
+  });
+});

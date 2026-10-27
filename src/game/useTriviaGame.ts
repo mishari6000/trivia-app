@@ -2,18 +2,19 @@ import { useCallback, useReducer } from 'react';
 
 import { getLocalQuestions } from '../data/getLocalQuestions';
 import { createInitialState, gameReducer } from './gameReducer';
+import { prepareSession } from './shuffle';
+
+/** A fresh session: answer orders are shuffled once here, never during rendering. */
+const newSession = () => prepareSession(getLocalQuestions());
 
 export function useTriviaGame() {
   const [state, dispatch] = useReducer(gameReducer, undefined, () =>
-    createInitialState(getLocalQuestions()),
+    createInitialState(newSession()),
   );
 
   const answer = useCallback((optionId: string) => dispatch({ type: 'answer', optionId }), []);
   const next = useCallback(() => dispatch({ type: 'next' }), []);
-  const restart = useCallback(
-    () => dispatch({ type: 'restart', questions: getLocalQuestions() }),
-    [],
-  );
+  const restart = useCallback(() => dispatch({ type: 'restart', questions: newSession() }), []);
 
   return {
     state,
