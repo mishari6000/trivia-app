@@ -6,9 +6,11 @@ import { colors, fonts, radius, spacing } from '../theme/theme';
 type FeedbackBannerProps = {
   /** null keeps the reserved space empty so the layout does not jump. */
   isCorrect: boolean | null;
+  /** Shown under a wrong answer as «الإجابة الصحيحة: …». */
+  correctAnswer?: string | null;
 };
 
-export function FeedbackBanner({ isCorrect }: FeedbackBannerProps) {
+export function FeedbackBanner({ isCorrect, correctAnswer }: FeedbackBannerProps) {
   if (isCorrect === null) {
     return <View style={styles.placeholder} />;
   }
@@ -24,12 +26,18 @@ export function FeedbackBanner({ isCorrect }: FeedbackBannerProps) {
       accessibilityRole="alert"
     >
       <Ionicons name={isCorrect ? 'checkmark-circle' : 'close-circle'} size={28} color={color} />
-      <Text style={[styles.text, { color }]}>{isCorrect ? 'صح عليك!' : 'مو هذي الإجابة'}</Text>
+      <View style={styles.texts}>
+        <Text style={[styles.text, { color }]}>{isCorrect ? 'صح عليك!' : 'مو هذي الإجابة'}</Text>
+        {!isCorrect && correctAnswer ? (
+          <Text style={styles.reveal}>الإجابة الصحيحة: {correctAnswer}</Text>
+        ) : null}
+      </View>
     </View>
   );
 }
 
-const BANNER_MIN_HEIGHT = 56;
+// Tall enough for the two-line wrong-answer state, so showing feedback doesn't shift the layout.
+const BANNER_MIN_HEIGHT = 84;
 
 const styles = StyleSheet.create({
   placeholder: {
@@ -45,10 +53,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  text: {
+  texts: {
     flexShrink: 1,
+  },
+  text: {
     fontFamily: fonts.extraBold,
     fontSize: 20,
     lineHeight: 30,
+  },
+  reveal: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+    lineHeight: 26,
+    color: colors.ink,
   },
 });

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, View, type ScrollViewInstance } from 'react-native';
 
-import { AnswerButton, type AnswerButtonStatus } from '../components/AnswerButton';
+import { AnswerButton } from '../components/AnswerButton';
 import { CategoryBadge } from '../components/CategoryBadge';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { GameTitle } from '../components/GameTitle';
@@ -11,6 +11,7 @@ import { QuestionProgress } from '../components/QuestionProgress';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { ScreenLayout } from '../components/ScreenLayout';
+import { getAnswerStatus, getRevealedAnswer } from '../game/answerStatus';
 import { getQuestionProgress } from '../game/progress';
 import { useTriviaGame } from '../game/useTriviaGame';
 import { MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
@@ -26,12 +27,6 @@ export function GameScreen() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [state.currentIndex, isResults]);
-
-  const statusFor = (optionId: string): AnswerButtonStatus => {
-    if (state.selectedOptionId === null) return 'idle';
-    if (optionId !== state.selectedOptionId) return 'dimmed';
-    return state.lastAnswerCorrect ? 'correct' : 'incorrect';
-  };
 
   return (
     <ScreenLayout
@@ -64,14 +59,17 @@ export function GameScreen() {
                 key={option.id}
                 label={option.text}
                 language={currentQuestion.language}
-                status={statusFor(option.id)}
+                status={getAnswerStatus(state, option.id)}
                 disabled={state.phase !== 'answering'}
                 onPress={() => answer(option.id)}
               />
             ))}
           </View>
 
-          <FeedbackBanner isCorrect={state.lastAnswerCorrect} />
+          <FeedbackBanner
+            isCorrect={state.lastAnswerCorrect}
+            correctAnswer={getRevealedAnswer(state)}
+          />
 
           <View style={styles.nextSlot}>
             {state.phase === 'feedback' ? (
