@@ -28,7 +28,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         />
         <Text style={styles.cardTitle}>تحدّي المعلومات العامة</Text>
         <Text style={styles.cardText}>
-          خمس أسئلة، لكل سؤال أربع إجابات. جاوب صح وجمّع نقاطك!
+          خمس أسئلة، لكل سؤال 15 ثانية وأربع إجابات. وعندك 50/50 مرة وحدة!
         </Text>
       </FramedCard>
 
