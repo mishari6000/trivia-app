@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
-import { colors, fonts, radius, shadow, spacing, textDirection } from '../theme/theme';
+import { colors, fonts, textDirection } from '../theme/theme';
 import type { QuestionLanguage } from '../types/question';
+import { FramedCard } from './FramedCard';
 
 type QuestionCardProps = {
   question: string;
@@ -10,37 +11,19 @@ type QuestionCardProps = {
 
 export function QuestionCard({ question, language }: QuestionCardProps) {
   return (
-    <View style={[styles.card, shadow]}>
-      <View style={styles.accentBar} />
+    <FramedCard>
       <Text style={[styles.text, textDirection(language)]} accessibilityRole="header">
         {question}
       </Text>
-    </View>
+    </FramedCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  accentBar: {
-    position: 'absolute',
-    top: 0,
-    start: 0,
-    end: 0,
-    height: 6,
-    backgroundColor: colors.primary,
-  },
   text: {
     fontFamily: fonts.bold,
-    fontSize: 22,
-    lineHeight: 36,
+    fontSize: 23,
+    lineHeight: 38,
     color: colors.ink,
   },
 });

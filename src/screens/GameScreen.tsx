@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
+import { StyleSheet, View, type ScrollViewInstance } from 'react-native';
 
 import { AnswerButton, type AnswerButtonStatus } from '../components/AnswerButton';
 import { CategoryBadge } from '../components/CategoryBadge';
 import { FeedbackBanner } from '../components/FeedbackBanner';
+import { GameTitle } from '../components/GameTitle';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { QuestionCard } from '../components/QuestionCard';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { useTriviaGame } from '../game/useTriviaGame';
-import { colors, fonts, MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
+import { MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
 
 export function GameScreen() {
   const { state, currentQuestion, totalQuestions, isLastQuestion, answer, next, restart } =
@@ -30,16 +31,18 @@ export function GameScreen() {
   };
 
   return (
-    <ScreenLayout scrollRef={scrollRef}>
-      <View style={styles.header}>
-        <View style={styles.titleBlock}>
-          <Text style={styles.title} accessibilityRole="header">
-            تحدّي اليمعة
-          </Text>
-          <CategoryBadge label="معلومات عامة" />
+    <ScreenLayout
+      scrollRef={scrollRef}
+      header={
+        <View style={styles.header}>
+          <View style={styles.titleBlock}>
+            <GameTitle size="compact" />
+            <CategoryBadge label="معلومات عامة" />
+          </View>
+          <ScoreBadge score={state.score} />
         </View>
-        <ScoreBadge score={state.score} />
-      </View>
+      }
+    >
 
       {isResults || !currentQuestion ? (
         <ResultsPanel score={state.score} total={totalQuestions} onPlayAgain={restart} />
@@ -86,12 +89,6 @@ const styles = StyleSheet.create({
   titleBlock: {
     flexShrink: 1,
     gap: spacing.xs,
-  },
-  title: {
-    fontFamily: fonts.extraBold,
-    fontSize: 26,
-    lineHeight: 38,
-    color: colors.ink,
   },
   playArea: {
     flex: 1,

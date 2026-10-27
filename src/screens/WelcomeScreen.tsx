@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { CategoryBadge } from '../components/CategoryBadge';
+import { CategoryTile } from '../components/CategoryTile';
+import { FramedCard } from '../components/FramedCard';
+import { GameTitle } from '../components/GameTitle';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { colors, fonts, radius, shadow, spacing } from '../theme/theme';
+import { colors, fonts, spacing } from '../theme/theme';
 
 type WelcomeScreenProps = {
   onStart: () => void;
@@ -11,21 +13,24 @@ type WelcomeScreenProps = {
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
-    <ScreenLayout>
-      <View style={styles.hero}>
-        <View
-          style={[styles.emblem, shadow]}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          <Text style={styles.emblemMark}>؟</Text>
+    <ScreenLayout
+      header={
+        <View style={styles.hero}>
+          <GameTitle size="large" />
+          <Text style={styles.tagline}>خمس أسئلة... ورّنا معلوماتك!</Text>
         </View>
-        <Text style={styles.title} accessibilityRole="header">
-          تحدّي اليمعة
+      }
+    >
+      <FramedCard style={styles.card}>
+        <CategoryTile
+          label="معلومات عامة"
+          image={require('../../assets/images/category-general.png')}
+        />
+        <Text style={styles.cardTitle}>تحدّي المعلومات العامة</Text>
+        <Text style={styles.cardText}>
+          خمس أسئلة، لكل سؤال أربع إجابات. جاوب صح وجمّع نقاطك!
         </Text>
-        <CategoryBadge label="معلومات عامة" style={styles.badge} />
-        <Text style={styles.tagline}>خمس أسئلة... ورّنا معلوماتك!</Text>
-      </View>
+      </FramedCard>
 
       <View style={styles.actions}>
         <PrimaryButton label="ابدأ التحدّي" onPress={onStart} />
@@ -36,47 +41,38 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
 const styles = StyleSheet.create({
   hero: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    paddingTop: spacing.xxl,
+    gap: spacing.sm,
+    paddingTop: spacing.lg,
   },
-  emblem: {
-    width: 112,
-    height: 112,
-    borderRadius: radius.lg + 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
-    transform: [{ rotate: '-6deg' }],
-    marginBottom: spacing.sm,
-  },
-  emblemMark: {
-    fontFamily: fonts.extraBold,
-    fontSize: 64,
-    lineHeight: 92,
-    color: colors.ink,
-  },
-  title: {
-    fontFamily: fonts.extraBold,
-    fontSize: 40,
-    lineHeight: 58,
+  tagline: {
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    lineHeight: 32,
     color: colors.ink,
     textAlign: 'center',
   },
-  badge: {
-    alignSelf: 'center',
+  card: {
+    alignItems: 'center',
+    gap: spacing.md,
   },
-  tagline: {
+  cardTitle: {
+    fontFamily: fonts.extraBold,
+    fontSize: 24,
+    lineHeight: 36,
+    color: colors.ink,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  cardText: {
     fontFamily: fonts.medium,
-    fontSize: 19,
+    fontSize: 18,
     lineHeight: 30,
     color: colors.inkMuted,
     textAlign: 'center',
   },
   actions: {
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.sm,
+    marginTop: 'auto',
+    paddingTop: spacing.md,
   },
 });

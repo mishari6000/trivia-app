@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, radius, shadow, spacing } from '../theme/theme';
+import { colors, fonts, spacing } from '../theme/theme';
+import { FramedCard } from './FramedCard';
 import { PrimaryButton } from './PrimaryButton';
 
 type ResultsPanelProps = {
@@ -13,14 +14,14 @@ type ResultsPanelProps = {
 export function ResultsPanel({ score, total, onPlayAgain }: ResultsPanelProps) {
   return (
     <View style={styles.container}>
-      <View style={[styles.card, shadow]}>
+      <FramedCard style={styles.card}>
         <View style={styles.trophy}>
-          <Ionicons name="trophy" size={44} color={colors.ink} />
+          <Ionicons name="trophy" size={48} color={colors.ink} />
         </View>
         <Text style={styles.title} accessibilityRole="header">
           نتيجتك: {score} من {total}
         </Text>
-      </View>
+      </FramedCard>
       <PrimaryButton label="العب مرة ثانية" onPress={onPlayAgain} />
     </View>
   );
@@ -33,25 +34,20 @@ const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
     gap: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: spacing.xxl,
-    paddingHorizontal: spacing.xl,
   },
   trophy: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent,
+    backgroundColor: colors.sun,
   },
   title: {
     fontFamily: fonts.extraBold,
-    fontSize: 30,
-    lineHeight: 44,
+    fontSize: 32,
+    lineHeight: 46,
     color: colors.ink,
     textAlign: 'center',
   },

@@ -28,5 +28,12 @@ Commit `73ceedb` — `feat: complete core trivia game`.
 - `direction: 'rtl'` على native موثّق رسميًا لـ iOS؛ لم يُجرَّب على أندرويد بعد.
 - الاتصال المحلي عبر Wi‑Fi ما وصل للهاتف (احتمال McAfee VPN أو الجدار الناري)؛ وضع tunnel يشتغل: `npx.cmd expo start --tunnel`.
 
+## تحديث التصميم (بين Extra 1 و Extra 2) — مكتمل ✅
+- هوية مستوحاة من أسلوب مسابقات الكويت العربية (بدون نسخ شعار أو رسومات أو اسم أي موقع): هيدر تركوازي منحني بتدرّج، شعار الاسم بخط أزرق عريض وظل كحلي، بطاقات بإطار سماوي، أزرار صفراء على شكل حبّة.
+- مكوّنات جديدة: `GameTitle`، `FramedCard`، `CategoryTile`. حُذف `GeometricBackground`.
+- رسمة بطاقة الفئة `assets/images/category-general.png` مولّدة بـ kie.ai (Nano Banana 2) عبر `scripts/generate-category-art.mjs`؛ المستخدم أدخل المفتاح بنفسه، ولا يوجد مفتاح في أي ملف.
+- الفحوصات: TypeScript ✅، lint ✅، jest 11/11 ✅، web export ✅، لعبة كاملة في المتصفح ✅.
+- ✅ أكّد المستخدم التصميم والصورة على iPhone.
+
 ### المرحلة القادمة
 Extra 2 — ترتيب الإجابات العشوائي.

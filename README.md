@@ -57,8 +57,10 @@ src/
 | `PrimaryButton` | `src/components/PrimaryButton.tsx` | `WelcomeScreen` (ابدأ التحدّي)، `GameScreen` (التالي / شوف النتيجة)، `ResultsPanel` |
 | `ResultsPanel` | `src/components/ResultsPanel.tsx` | `GameScreen` — حالة النتيجة |
 | `CategoryBadge` | `src/components/CategoryBadge.tsx` | `WelcomeScreen` و `GameScreen` — شارة الفئة |
-| `ScreenLayout` | `src/components/ScreenLayout.tsx` | `WelcomeScreen` و `GameScreen` — المساحات الآمنة، التمرير، عمود RTL |
-| `GeometricBackground` | `src/components/GeometricBackground.tsx` | `ScreenLayout` — خلفية زخرفية |
+| `ScreenLayout` | `src/components/ScreenLayout.tsx` | `WelcomeScreen` و `GameScreen` — الهيدر المنحني، المساحات الآمنة، التمرير، عمود RTL |
+| `FramedCard` | `src/components/FramedCard.tsx` | `QuestionCard` و `ResultsPanel` و `WelcomeScreen` — البطاقة بالإطار السماوي |
+| `GameTitle` | `src/components/GameTitle.tsx` | `WelcomeScreen` (كبير) و `GameScreen` (مصغّر) — شعار الاسم |
+| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة «معلومات عامة» |
 
 ## ملاحظات تصميمية
 
@@ -67,6 +69,9 @@ src/
 - **RTL محصور بالشاشة:** `direction: 'rtl'` على native و `dir="rtl"` على الويب — بدون `I18nManager.forceRTL`.
   اتجاه نص السؤال والإجابات يتحدد من `language` لكل سؤال، فالأسئلة الإنجليزية مستقبلًا تظهر LTR.
 - **الخط:** Tajawal (رخصة OFL) مضمّن من `@expo-google-fonts/tajawal`؛ لا يوجد طلب خط من الإنترنت وقت التشغيل.
+- **رسمة الفئة:** `assets/images/category-general.png` مولّدة بـ kie.ai عبر
+  `node scripts/generate-category-art.mjs` (يطلب مفتاح API بإدخال مخفي، أو من `KIE_API_KEY`).
+  المفتاح لا يُحفظ في ملف ولا يوضع في التطبيق أو GitHub.
 
 ## اختبار الهاتف
 

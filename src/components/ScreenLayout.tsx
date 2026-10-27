@@ -1,9 +1,8 @@
 import type { ReactNode, Ref } from 'react';
 import { Platform, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, MAX_CONTENT_WIDTH, spacing } from '../theme/theme';
-import { GeometricBackground } from './GeometricBackground';
+import { colors, gradients, MAX_CONTENT_WIDTH, spacing } from '../theme/theme';
 
 // Native lays out RTL via the `direction` style; React Native Web ignores that style
 // and uses its own `dir` prop instead. Scoped to the screen, not a global RTL switch.
@@ -12,43 +11,87 @@ const webRtlProps = isWeb ? ({ dir: 'rtl' } as object) : undefined;
 const nativeRtlStyle = isWeb ? undefined : ({ direction: 'rtl' } as const);
 
 type ScreenLayoutProps = {
+  /** Content of the curved gradient header band. */
+  header: ReactNode;
+  /** Body content; its first card overlaps the header curve. */
   children: ReactNode;
   scrollRef?: Ref<ScrollViewInstance>;
 };
 
-/** Safe areas, background, scrolling and the centered phone-width RTL column. */
-export function ScreenLayout({ children, scrollRef }: ScreenLayoutProps) {
+/** Curved gradient header, safe areas, scrolling and the centered phone-width RTL column. */
+export function ScreenLayout({ header, children, scrollRef }: ScreenLayoutProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <GeometricBackground />
+    <View style={styles.root}>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + spacing.lg },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View {...webRtlProps} style={[styles.column, nativeRtlStyle]}>
-          {children}
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop: insets.top + spacing.lg,
+              paddingLeft: insets.left + spacing.lg,
+              paddingRight: insets.right + spacing.lg,
+            },
+          ]}
+        >
+          <View {...webRtlProps} style={[styles.column, nativeRtlStyle]}>
+            {header}
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.body,
+            { paddingLeft: insets.left + spacing.lg, paddingRight: insets.right + spacing.lg },
+          ]}
+        >
+          <View {...webRtlProps} style={[styles.column, styles.bodyColumn, nativeRtlStyle]}>
+            {children}
+          </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
+const HEADER_CURVE = 56;
+const CARD_OVERLAP = 40;
+
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  header: {
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    backgroundColor: colors.primary,
+    backgroundImage: gradients.header,
+    borderBottomLeftRadius: HEADER_CURVE,
+    borderBottomRightRadius: HEADER_CURVE,
+    paddingBottom: CARD_OVERLAP + spacing.xl,
+  },
+  body: {
+    flex: 1,
+    alignItems: 'center',
+    marginTop: -CARD_OVERLAP,
   },
   column: {
-    flex: 1,
     width: '100%',
     maxWidth: MAX_CONTENT_WIDTH,
-    gap: spacing.xl,
+  },
+  bodyColumn: {
+    flex: 1,
+    gap: spacing.lg,
   },
 });

@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       {/* GameScreen mounts with a fresh game, so Start always begins at score zero. */}
       {screen === 'welcome' ? <WelcomeScreen onStart={() => setScreen('game')} /> : <GameScreen />}
     </SafeAreaProvider>

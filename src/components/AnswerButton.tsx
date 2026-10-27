@@ -61,15 +61,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 2,
     borderColor: colors.border,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
   },
   pressed: {
     borderColor: colors.primary,
-    backgroundColor: '#F1FAF8',
+    backgroundColor: colors.frameInner,
   },
   correct: {
     backgroundColor: colors.success,

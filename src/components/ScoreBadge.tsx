@@ -6,6 +6,7 @@ type ScoreBadgeProps = {
   score: number;
 };
 
+/** Outlined score pill that sits on the teal header. */
 export function ScoreBadge({ score }: ScoreBadgeProps) {
   return (
     <View
@@ -25,21 +26,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.ink,
-    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.75)',
+    borderRadius: radius.md,
     paddingVertical: spacing.xs + 2,
     paddingHorizontal: spacing.md,
   },
   label: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
+    fontFamily: fonts.bold,
+    fontSize: 15,
     color: colors.white,
   },
   value: {
     fontFamily: fonts.extraBold,
-    fontSize: 18,
-    color: colors.accent,
-    minWidth: 14,
+    fontSize: 22,
+    lineHeight: 30,
+    color: colors.white,
+    minWidth: 16,
     textAlign: 'center',
   },
 });

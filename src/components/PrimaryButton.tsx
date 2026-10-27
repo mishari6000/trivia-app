@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, fonts, MIN_BUTTON_HEIGHT, radius, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, MIN_BUTTON_HEIGHT, radius, shadow, spacing } from '../theme/theme';
 
 type PrimaryButtonProps = {
   label: string;
@@ -8,6 +8,7 @@ type PrimaryButtonProps = {
   disabled?: boolean;
 };
 
+/** Large yellow pill for the main action on each screen. */
 export function PrimaryButton({ label, onPress, disabled = false }: PrimaryButtonProps) {
   return (
     <Pressable
@@ -29,16 +30,18 @@ export function PrimaryButton({ label, onPress, disabled = false }: PrimaryButto
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: MIN_BUTTON_HEIGHT,
+    minHeight: MIN_BUTTON_HEIGHT + 4,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
+    backgroundColor: colors.accent,
+    backgroundImage: gradients.accent,
+    borderRadius: radius.pill,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
   },
   pressed: {
-    backgroundColor: colors.primaryPressed,
+    backgroundImage: 'none',
+    backgroundColor: colors.accentPressed,
     transform: [{ scale: 0.98 }],
   },
   disabled: {
@@ -46,9 +49,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.extraBold,
-    fontSize: 20,
-    lineHeight: 30,
-    color: colors.white,
+    fontSize: 22,
+    lineHeight: 32,
+    color: colors.ink,
     textAlign: 'center',
   },
 });
