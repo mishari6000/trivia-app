@@ -8,18 +8,19 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { GameScreen } from './src/screens/GameScreen';
+import { GameSessionScreen } from './src/screens/GameSessionScreen';
 import { IntroScreen } from './src/screens/IntroScreen';
 import { WelcomeScreen } from './src/screens/WelcomeScreen';
 import { DEFAULT_CATEGORY } from './src/data/categories';
 import { colors } from './src/theme/theme';
-import type { CategoryName } from './src/types/question';
+import type { CategoryName, QuestionSource } from './src/types/question';
 
 type Screen = 'intro' | 'welcome' | 'game';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('intro');
   const [category, setCategory] = useState<CategoryName>(DEFAULT_CATEGORY);
+  const [source, setSource] = useState<QuestionSource>('local');
   // Fonts ship inside the app bundle; nothing is downloaded at runtime.
   const [fontsLoaded, fontError] = useFonts({
     Tajawal_400Regular,
@@ -35,10 +36,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      {/* GameScreen mounts with a fresh game, so Start always begins at score zero. */}
+      {/* Each game mounts fresh (GameSessionScreen loads it), so Start always begins at zero. */}
       {screen === 'intro' ? <IntroScreen onDone={() => setScreen('welcome')} /> : null}
       {screen === 'welcome' ? (
         <WelcomeScreen
+          source={source}
+          onSourceChange={setSource}
           onStart={(chosen) => {
             setCategory(chosen);
             setScreen('game');
@@ -46,7 +49,12 @@ export default function App() {
         />
       ) : null}
       {screen === 'game' ? (
-        <GameScreen category={category} onChangeCategory={() => setScreen('welcome')} />
+        <GameSessionScreen
+          key={`${category}|${source}`}
+          category={category}
+          source={source}
+          onExit={() => setScreen('welcome')}
+        />
       ) : null}
     </SafeAreaProvider>
   );

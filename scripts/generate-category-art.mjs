@@ -24,6 +24,29 @@ const SUBJECTS = {
     '"Sports": a football, a basketball, a gold trophy, a stopwatch and a whistle',
   animals:
     '"Animals": a friendly camel, a giraffe head, a parrot, a sea turtle and a paw print',
+  books: '"Books": a stack of colourful books, an open book, a bookmark and round reading glasses',
+  film: '"Film": a blank film clapperboard, a film reel, a movie camera and a bucket of popcorn',
+  music: '"Music": headphones, an acoustic guitar, a vinyl record and floating musical notes',
+  theatre:
+    '"Musicals & Theatres": red stage curtains, comedy and tragedy masks, a spotlight and a microphone',
+  television: '"Television": a retro television set with antennas, a remote control and a small satellite dish',
+  videogames: '"Video Games": a game controller, a joystick, pixel-art hearts and a spinning gold coin',
+  boardgames: '"Board Games": two dice, a chess knight, a checkered game board and playing cards',
+  computers: '"Computers": a laptop, a computer chip, a mouse and curly code bracket symbols',
+  mathematics:
+    '"Mathematics": a calculator, a ruler, a drawing compass, geometric shapes and plus, minus and times symbols',
+  mythology: '"Mythology": a winged horse, a trident, a lightning bolt and an ancient temple',
+  politics: '"Politics": a ballot box, a speaker podium with microphones, a judge gavel and a small globe',
+  art: '"Art": a paint palette, paintbrushes, an easel with a blank canvas and colourful paint splashes',
+  celebrities:
+    '"Celebrities": a red carpet, a golden star plaque, a camera with a flash and a microphone, with no people',
+  vehicles: '"Vehicles": a sports car, a motorbike, an aeroplane and a steering wheel',
+  comics: '"Comics": a comic book with empty panels, empty speech bubbles and a starburst shape',
+  gadgets: '"Gadgets": a smartphone, a smartwatch, wireless earbuds and a small drone',
+  anime:
+    '"Japanese Anime & Manga": a stack of manga books, a cherry blossom branch, a paper lantern and sparkles',
+  cartoons:
+    '"Cartoon & Animations": a film strip with simple doodle frames, a pencil, a paintbrush and a sparkle star',
 };
 
 const STYLE = [

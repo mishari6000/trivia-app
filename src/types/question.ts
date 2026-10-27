@@ -1,13 +1,34 @@
 export type QuestionLanguage = 'ar' | 'en';
 
-/** Category names match Open Trivia DB, so Tuesday's internet questions map straight in. */
+/** Category names are exactly Open Trivia DB's, so internet questions map straight in. */
 export type CategoryName =
   | 'General Knowledge'
+  | 'Entertainment: Books'
+  | 'Entertainment: Film'
+  | 'Entertainment: Music'
+  | 'Entertainment: Musicals & Theatres'
+  | 'Entertainment: Television'
+  | 'Entertainment: Video Games'
+  | 'Entertainment: Board Games'
   | 'Science & Nature'
+  | 'Science: Computers'
+  | 'Science: Mathematics'
+  | 'Mythology'
+  | 'Sports'
   | 'Geography'
   | 'History'
-  | 'Sports'
-  | 'Animals';
+  | 'Politics'
+  | 'Art'
+  | 'Celebrities'
+  | 'Animals'
+  | 'Vehicles'
+  | 'Entertainment: Comics'
+  | 'Science: Gadgets'
+  | 'Entertainment: Japanese Anime & Manga'
+  | 'Entertainment: Cartoon & Animations';
+
+/** Where a game's questions come from. */
+export type QuestionSource = 'local' | 'online';
 
 /** Raw question shape. Future internet/AI sources must return this same shape. */
 export type Question = {

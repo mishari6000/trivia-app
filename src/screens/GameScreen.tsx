@@ -17,14 +17,17 @@ import { getAnswerStatus, getFeedbackOutcome, getRevealedAnswer } from '../game/
 import { getQuestionProgress } from '../game/progress';
 import { useTriviaGame } from '../game/useTriviaGame';
 import { colors, fonts, MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
-import type { CategoryName } from '../types/question';
+import type { CategoryName, PlayableQuestion } from '../types/question';
 
 type GameScreenProps = {
   category: CategoryName;
+  /** The prepared session (5 questions); a new game remounts this screen with new ones. */
+  questions: PlayableQuestion[];
+  onPlayAgain: () => void;
   onChangeCategory: () => void;
 };
 
-export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
+export function GameScreen({ category, questions, onPlayAgain, onChangeCategory }: GameScreenProps) {
   const {
     state,
     currentQuestion,
@@ -35,9 +38,8 @@ export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
     canUseFiftyFifty,
     answer,
     next,
-    restart,
     applyFiftyFifty,
-  } = useTriviaGame(category);
+  } = useTriviaGame(questions);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const isResults = state.phase === 'results';
   const progress = getQuestionProgress(state);
@@ -76,7 +78,7 @@ export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
         <ResultsPanel
           score={state.score}
           total={totalQuestions}
-          onPlayAgain={restart}
+          onPlayAgain={onPlayAgain}
           onChangeCategory={onChangeCategory}
         />
       ) : (

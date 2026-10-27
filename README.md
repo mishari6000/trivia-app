@@ -37,7 +37,9 @@ App.tsx                         تحميل الخط (Tajawal مضمّن) + ال�
 src/
   types/question.ts             نوع Question المشترك + PlayableQuestion
   data/questions.ts             بنك الأسئلة المحلي: 10 أسئلة لكل فئة، 60 سؤال (خارج JSX)
-  data/categories.ts            الفئات: الاسم العربي، رقم Open Trivia DB، الصورة
+  data/categories.ts            24 فئة من Open Trivia DB: الاسم العربي، رقمها، الصورة/الأيقونة
+  data/openTrivia.ts            جلب الأسئلة من الإنترنت: فك الترميز، التحقق، الأخطاء، حد الـ 5 ثواني
+  game/loadSession.ts           يجهّز جلسة 5 أسئلة من المحلي أو من الإنترنت
   data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
   game/gameReducer.ts           حالات اللعبة + المؤقّت (deadline) + 50/50؛ كل سؤال ينحسم مرة وحدة
   game/fiftyFifty.ts            اختيار إجابتين خطأ للحذف
@@ -45,6 +47,7 @@ src/
   game/shuffle.ts               اختيار 5 أسئلة عشوائية + خلط الإجابات، مرة وحدة لكل لعبة
   game/useTriviaGame.ts         hook: عدّاد العرض، انتهاء الوقت، الانتقال التلقائي، الرجوع من الخلفية
   screens/IntroScreen.tsx       فيديو المقدمة أول ما يفتح التطبيق (expo-video) مع «تخطّي»
+  screens/GameSessionScreen.tsx  يحمّل الأسئلة (تحميل / خطأ / إعادة / بديل عربي) ثم يشغّل اللعبة
   screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئة + ابدأ التحدّي)
   screens/GameScreen.tsx        شاشة اللعب (لعب + نتيجة)
   components/                   المكوّنات القابلة لإعادة الاستخدام
@@ -73,6 +76,14 @@ src/
 | `InfoBanner` | `src/components/InfoBanner.tsx` | `WelcomeScreen` — شريط أخضر بقوانين اللعبة |
 | `SecondaryButton` | `src/components/SecondaryButton.tsx` | `ResultsPanel` — «غيّر الفئة» |
 
+## مصدر الأسئلة
+
+- **عربي:** 60 سؤال داخل التطبيق في 6 فئات، وتشتغل بدون إنترنت.
+- **English · إنترنت:** [Open Trivia DB](https://opentdb.com) في 24 فئة (multiple choice). كل لعبة تجيب 10 وتختار 5.
+  التطبيق ينتظر 5.5 ثانية بين الطلبات (حد الخادم 5 ثواني، ويرجع HTTP 429)، ويعيد المحاولة تلقائيًا.
+  إذا فشل: «حاول مرة ثانية»، أو «العب بالأسئلة العربية» للفئات اللي عندها أسئلة محلية.
+  الأسئلة الإنجليزية تنعرض من اليسار لليمين داخل الواجهة العربية. المصدر مذكور: CC BY-SA 4.0.
+
 ## أين الأسئلة؟
 
 كل الأسئلة في `src/data/questions.ts` (10 لكل فئة)، بعيد عن الشاشات والمكوّنات. كل سؤال فيه:
@@ -100,9 +111,9 @@ src/
 - **RTL محصور بالشاشة:** `direction: 'rtl'` على native و `dir="rtl"` على الويب — بدون `I18nManager.forceRTL`.
   اتجاه نص السؤال والإجابات يتحدد من `language` لكل سؤال، فالأسئلة الإنجليزية مستقبلًا تظهر LTR.
 - **الخط:** Tajawal (رخصة OFL) مضمّن من `@expo-google-fonts/tajawal`؛ لا يوجد طلب خط من الإنترنت وقت التشغيل.
-- **رسومات الفئات:** `assets/images/category-*.png` مولّدة بـ kie.ai عبر
-  `node scripts/generate-category-art.mjs [slug ...]` (يطلب مفتاح API بإدخال مخفي، أو من `KIE_API_KEY`).
-  المفتاح لا يُحفظ في ملف ولا يوضع في التطبيق أو GitHub.
+- **رسومات الفئات (24):** مولّدة بـ kie.ai عبر `node scripts/generate-category-art.mjs [slug ...]`
+  (يطلب مفتاح API بإدخال مخفي، أو من `KIE_API_KEY`، ولا يُحفظ المفتاح في أي ملف).
+  السكربت يحفظ PNG 1024px؛ بعدها تنقص الحواف وتصغّر لـ 480×480 وتتحول JPG (`assets/images/category-*.jpg`، المجموع ~1.8MB).
 
 ## اختبار الهاتف
 

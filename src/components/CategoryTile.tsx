@@ -5,7 +5,8 @@ import { colors, fonts, gradients, radius, shadow, spacing } from '../theme/them
 
 type CategoryTileProps = {
   label: string;
-  questionCount: number;
+  /** Small chip on the art: question count for local, «EN» for internet questions. */
+  badge: { icon: keyof typeof Ionicons.glyphMap; text: string };
   image?: ImageSourcePropType;
   /** Shown when the category has no illustration. */
   icon: keyof typeof Ionicons.glyphMap;
@@ -13,12 +14,12 @@ type CategoryTileProps = {
 };
 
 /** Event-style category card: artwork, info chips, name and a Start pill. Tapping starts it. */
-export function CategoryTile({ label, questionCount, image, icon, onStart }: CategoryTileProps) {
+export function CategoryTile({ label, badge, image, icon, onStart }: CategoryTileProps) {
   return (
     <Pressable
       onPress={onStart}
       accessibilityRole="button"
-      accessibilityLabel={`ابدأ فئة ${label}، ${questionCount} أسئلة`}
+      accessibilityLabel={`ابدأ فئة ${label}`}
       style={({ pressed }) => [styles.tile, shadow, pressed && styles.pressed]}
     >
       <View style={styles.art}>
@@ -30,8 +31,8 @@ export function CategoryTile({ label, questionCount, image, icon, onStart }: Cat
         <View style={[StyleSheet.absoluteFill, styles.shade]} />
         <View style={styles.chips}>
           <View style={styles.chip}>
-            <Ionicons name="help-circle" size={14} color={colors.white} />
-            <Text style={styles.chipText}>{questionCount}</Text>
+            <Ionicons name={badge.icon} size={14} color={colors.white} />
+            <Text style={styles.chipText}>{badge.text}</Text>
           </View>
           <View style={styles.chip}>
             <Ionicons name="time" size={14} color={colors.white} />

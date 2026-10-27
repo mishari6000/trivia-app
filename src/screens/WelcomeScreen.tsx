@@ -4,22 +4,30 @@ import { CategoryTile } from '../components/CategoryTile';
 import { GameTitle } from '../components/GameTitle';
 import { InfoBanner } from '../components/InfoBanner';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { categories } from '../data/categories';
+import { SourceToggle } from '../components/SourceToggle';
+import { categoriesFor } from '../data/categories';
 import { getLocalQuestions } from '../data/getLocalQuestions';
 import { QUESTION_TIME_MS } from '../game/gameReducer';
 import { colors, fonts, spacing } from '../theme/theme';
-import type { CategoryName } from '../types/question';
+import type { CategoryName, QuestionSource } from '../types/question';
+import { ONLINE_CREDIT } from './GameSessionScreen';
 
 type WelcomeScreenProps = {
+  source: QuestionSource;
+  onSourceChange: (source: QuestionSource) => void;
   onStart: (category: CategoryName) => void;
 };
 
 /** Pairs of cards, so the grid is two columns wide on every phone. */
-const rows = Array.from({ length: Math.ceil(categories.length / 2) }, (_, i) =>
-  categories.slice(i * 2, i * 2 + 2),
-);
+function pairs<T>(items: T[]): T[][] {
+  return Array.from({ length: Math.ceil(items.length / 2) }, (_, i) => items.slice(i * 2, i * 2 + 2));
+}
 
-export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+export function WelcomeScreen({ source, onSourceChange, onStart }: WelcomeScreenProps) {
+  const list = categoriesFor(source);
+  const rows = pairs(list);
+  // Arabic agreement: 3–10 فئات، 11+ فئة.
+  const countLabel = list.length <= 10 ? `${list.length} فئات` : `${list.length} فئة`;
   return (
     <ScreenLayout
       header={
@@ -38,8 +46,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         subtitle="وعندك 50/50 مرة وحدة بكل لعبة!"
       />
 
+      <SourceToggle value={source} onChange={onSourceChange} />
+      {source === 'online' ? <Text style={styles.credit}>{ONLINE_CREDIT}</Text> : null}
+
       <Text style={styles.section} accessibilityRole="header">
-        اختار فئتك
+        اختار فئتك · {countLabel}
       </Text>
       <View style={styles.grid}>
         {rows.map((row) => (
@@ -48,7 +59,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
               <CategoryTile
                 key={category.name}
                 label={category.label}
-                questionCount={getLocalQuestions(category.name).length}
+                badge={
+                  source === 'online'
+                    ? { icon: 'globe', text: 'EN' }
+                    : { icon: 'help-circle', text: String(getLocalQuestions(category.name).length) }
+                }
                 image={category.image}
                 icon={category.icon}
                 onStart={() => onStart(category.name)}
@@ -88,6 +103,14 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     color: colors.text,
     marginTop: spacing.sm,
+  },
+  credit: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: -spacing.sm,
   },
   grid: {
     gap: spacing.md,
