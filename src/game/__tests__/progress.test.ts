@@ -3,15 +3,18 @@ import { createInitialState, gameReducer, type GameState } from '../gameReducer'
 import { getQuestionProgress } from '../progress';
 import { prepareSession } from '../shuffle';
 
+// A moment well inside the first question's 15-second window.
+const T = 1000;
+
 const session = () => prepareSession(getLocalQuestions());
 
 const answerAndNext = (state: GameState) =>
   gameReducer(
     gameReducer(state, {
-      type: 'answer',
+      type: 'answer', now: T,
       optionId: state.questions[state.currentIndex].correctOptionId,
     }),
-    { type: 'next' },
+    { type: 'next', now: T },
   );
 
 describe('getQuestionProgress', () => {
@@ -34,14 +37,14 @@ describe('getQuestionProgress', () => {
     }
     expect(seen).toEqual([1, 2, 3, 4, 5]);
     // On results (and with extra taps) it stays capped at the total.
-    state = gameReducer(state, { type: 'next' });
+    state = gameReducer(state, { type: 'next', now: T });
     expect(getQuestionProgress(state)).toEqual({ current: 5, total: 5 });
   });
 
   it('does not advance while showing feedback', () => {
     const initial = createInitialState(session());
     const state = gameReducer(initial, {
-      type: 'answer',
+      type: 'answer', now: T,
       optionId: initial.questions[0].correctOptionId,
     });
     expect(state.phase).toBe('feedback');
@@ -52,7 +55,7 @@ describe('getQuestionProgress', () => {
     let state = createInitialState(session());
     state = answerAndNext(answerAndNext(state));
     expect(getQuestionProgress(state).current).toBe(3);
-    state = gameReducer(state, { type: 'restart', questions: session() });
+    state = gameReducer(state, { type: 'restart', now: T, questions: session() });
     expect(getQuestionProgress(state)).toEqual({ current: 1, total: 5 });
   });
 });

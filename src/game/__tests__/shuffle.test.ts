@@ -3,6 +3,9 @@ import { questions as questionBank } from '../../data/questions';
 import { createInitialState, gameReducer } from '../gameReducer';
 import { prepareSession, QUESTIONS_PER_GAME, shuffle, type RandomSource } from '../shuffle';
 
+// A moment well inside the first question's 15-second window.
+const T = 1000;
+
 /** Deterministic random source (mulberry32) so tests never depend on luck. */
 function seeded(seed: number): RandomSource {
   let a = seed;
@@ -103,9 +106,9 @@ describe('prepareSession', () => {
     const initialOrder = order(state);
     for (let i = 0; i < session.length; i++) {
       const q = state.questions[state.currentIndex];
-      state = gameReducer(state, { type: 'answer', optionId: q.options[0].id });
+      state = gameReducer(state, { type: 'answer', now: T, optionId: q.options[0].id });
       expect(order(state)).toEqual(initialOrder);
-      state = gameReducer(state, { type: 'next' });
+      state = gameReducer(state, { type: 'next', now: T });
       expect(order(state)).toEqual(initialOrder);
     }
     expect(state.phase).toBe('results');

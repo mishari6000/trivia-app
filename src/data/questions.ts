@@ -1,6 +1,13 @@
 import type { Question } from '../types/question';
 
-/** Local General Knowledge question bank (Arabic). */
+/**
+ * Local General Knowledge question bank (Arabic), kept apart from screens and components.
+ *
+ * Each question has: an id, the category, its language (for text direction), the question
+ * text, the right answer and exactly three wrong answers. A future internet or AI source
+ * only needs to return this same `Question[]` shape; `getLocalQuestions` validates it and
+ * gives every answer a stable id, and the game never reads anything else.
+ */
 export const questions: Question[] = [
   {
     id: 'gk-001',

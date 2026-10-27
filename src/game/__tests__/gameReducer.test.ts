@@ -2,6 +2,9 @@ import { getLocalQuestions } from '../../data/getLocalQuestions';
 import { prepareSession } from '../shuffle';
 import { createInitialState, gameReducer, type GameAction, type GameState } from '../gameReducer';
 
+// A moment well inside the first question's 15-second window.
+const T = 1000;
+
 const play = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state);
 
 const wrongOptionId = (state: GameState) =>
@@ -25,14 +28,14 @@ describe('gameReducer', () => {
   });
 
   it('adds exactly one point for a correct answer', () => {
-    const state = play(initial, { type: 'answer', optionId: initial.questions[0].correctOptionId });
+    const state = play(initial, { type: 'answer', now: T, optionId: initial.questions[0].correctOptionId });
     expect(state.score).toBe(1);
     expect(state.phase).toBe('feedback');
     expect(state.lastAnswerCorrect).toBe(true);
   });
 
   it('adds zero points for an incorrect answer', () => {
-    const state = play(initial, { type: 'answer', optionId: wrongOptionId(initial) });
+    const state = play(initial, { type: 'answer', now: T, optionId: wrongOptionId(initial) });
     expect(state.score).toBe(0);
     expect(state.lastAnswerCorrect).toBe(false);
   });
@@ -43,29 +46,29 @@ describe('gameReducer', () => {
 
     const repeated = play(
       initial,
-      { type: 'answer', optionId: correct },
-      { type: 'answer', optionId: correct },
-      { type: 'answer', optionId: correct },
+      { type: 'answer', now: T, optionId: correct },
+      { type: 'answer', now: T, optionId: correct },
+      { type: 'answer', now: T, optionId: correct },
     );
     expect(repeated.score).toBe(1);
 
     const switched = play(
       initial,
-      { type: 'answer', optionId: wrong },
-      { type: 'answer', optionId: correct },
+      { type: 'answer', now: T, optionId: wrong },
+      { type: 'answer', now: T, optionId: correct },
     );
     expect(switched.selectedOptionId).toBe(wrong);
     expect(switched.score).toBe(0);
   });
 
   it('ignores unknown option ids and next before answering', () => {
-    expect(play(initial, { type: 'answer', optionId: 'nope' })).toBe(initial);
-    expect(play(initial, { type: 'next' })).toBe(initial);
+    expect(play(initial, { type: 'answer', now: T, optionId: 'nope' })).toBe(initial);
+    expect(play(initial, { type: 'next', now: T })).toBe(initial);
   });
 
   it('does not skip questions on rapid next taps', () => {
-    const answered = play(initial, { type: 'answer', optionId: wrongOptionId(initial) });
-    const state = play(answered, { type: 'next' }, { type: 'next' }, { type: 'next' });
+    const answered = play(initial, { type: 'answer', now: T, optionId: wrongOptionId(initial) });
+    const state = play(answered, { type: 'next', now: T }, { type: 'next', now: T }, { type: 'next', now: T });
     expect(state.currentIndex).toBe(1);
     expect(state.phase).toBe('answering');
   });
@@ -76,7 +79,7 @@ describe('gameReducer', () => {
     correctPattern.forEach((isCorrect) => {
       const q = state.questions[state.currentIndex];
       const optionId = isCorrect ? q.correctOptionId : wrongOptionId(state);
-      state = play(state, { type: 'answer', optionId }, { type: 'next' });
+      state = play(state, { type: 'answer', now: T, optionId }, { type: 'next', now: T });
     });
 
     expect(state.questions).toHaveLength(5);
@@ -84,7 +87,7 @@ describe('gameReducer', () => {
     expect(state.score).toBe(3);
     expect(state.currentIndex).toBe(4);
     // Nothing changes the score once results are shown.
-    expect(play(state, { type: 'answer', optionId: 'x' }, { type: 'next' })).toBe(state);
+    expect(play(state, { type: 'answer', now: T, optionId: 'x' }, { type: 'next', now: T })).toBe(state);
   });
 
   it('resets everything on restart', () => {
@@ -92,15 +95,15 @@ describe('gameReducer', () => {
     for (let i = 0; i < 5; i++) {
       state = play(
         state,
-        { type: 'answer', optionId: state.questions[state.currentIndex].correctOptionId },
-        { type: 'next' },
+        { type: 'answer', now: T, optionId: state.questions[state.currentIndex].correctOptionId },
+        { type: 'next', now: T },
       );
     }
     expect(state.score).toBe(5);
 
     const fresh = prepareSession(getLocalQuestions());
-    const restarted = play(state, { type: 'restart', questions: fresh });
-    expect(restarted).toEqual(createInitialState(fresh));
+    const restarted = play(state, { type: 'restart', now: T, questions: fresh });
+    expect(restarted).toEqual(createInitialState(fresh, T, state.sessionId + 1));
     expect(restarted.score).toBe(0);
     expect(restarted.currentIndex).toBe(0);
   });

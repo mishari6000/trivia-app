@@ -1,16 +1,20 @@
 import type { GameState } from './gameReducer';
 
 /**
- * idle      – not answered yet
+ * idle      – can still be picked
  * correct   – the player's correct pick
  * incorrect – the player's wrong pick
- * revealed  – the right answer, shown after a wrong pick
+ * revealed  – the right answer, shown after a wrong pick or a timeout
  * dimmed    – any other option once the question is locked
+ * removed   – taken out by 50/50; not selectable or announced
  */
-export type AnswerStatus = 'idle' | 'correct' | 'incorrect' | 'revealed' | 'dimmed';
+export type AnswerStatus = 'idle' | 'correct' | 'incorrect' | 'revealed' | 'dimmed' | 'removed';
+
+export type FeedbackOutcome = 'correct' | 'incorrect' | 'timeout';
 
 export function getAnswerStatus(state: GameState, optionId: string): AnswerStatus {
-  if (state.selectedOptionId === null) return 'idle';
+  if (state.removedOptionIds.includes(optionId)) return 'removed';
+  if (state.phase !== 'feedback') return 'idle';
   const question = state.questions[state.currentIndex];
 
   if (optionId === state.selectedOptionId) {
@@ -20,9 +24,15 @@ export function getAnswerStatus(state: GameState, optionId: string): AnswerStatu
   return 'dimmed';
 }
 
-/** Text of the right answer to show after a wrong pick; null otherwise. */
+export function getFeedbackOutcome(state: GameState): FeedbackOutcome | null {
+  if (state.phase !== 'feedback') return null;
+  if (state.timedOut) return 'timeout';
+  return state.lastAnswerCorrect ? 'correct' : 'incorrect';
+}
+
+/** Text of the right answer to show after a wrong pick or a timeout; null otherwise. */
 export function getRevealedAnswer(state: GameState): string | null {
-  if (state.selectedOptionId === null || state.lastAnswerCorrect) return null;
+  if (state.phase !== 'feedback' || state.lastAnswerCorrect) return null;
   const question = state.questions[state.currentIndex];
   return question?.options.find((o) => o.id === question.correctOptionId)?.text ?? null;
 }

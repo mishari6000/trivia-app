@@ -38,10 +38,11 @@ src/
   types/question.ts             نوع Question المشترك + PlayableQuestion
   data/questions.ts             بنك الأسئلة المحلي: 10 أسئلة (خارج JSX)
   data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
-  game/gameReducer.ts           حالات اللعبة: answering → feedback → results
+  game/gameReducer.ts           حالات اللعبة + المؤقّت (deadline) + 50/50؛ كل سؤال ينحسم مرة وحدة
+  game/fiftyFifty.ts            اختيار إجابتين خطأ للحذف
   game/answerStatus.ts          حالة كل زر + كشف الإجابة الصحيحة بعد الغلط
   game/shuffle.ts               اختيار 5 أسئلة عشوائية + خلط الإجابات، مرة وحدة لكل لعبة
-  game/useTriviaGame.ts         hook يربط الـ reducer بالشاشة
+  game/useTriviaGame.ts         hook: عدّاد العرض، انتهاء الوقت، الانتقال التلقائي، الرجوع من الخلفية
   screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئة + ابدأ التحدّي)
   screens/GameScreen.tsx        شاشة اللعب (لعب + نتيجة)
   components/                   المكوّنات القابلة لإعادة الاستخدام
@@ -63,7 +64,21 @@ src/
 | `FramedCard` | `src/components/FramedCard.tsx` | `QuestionCard` و `ResultsPanel` و `WelcomeScreen` — البطاقة بالإطار السماوي |
 | `GameTitle` | `src/components/GameTitle.tsx` | `WelcomeScreen` (كبير) و `GameScreen` (مصغّر) — شعار الاسم |
 | `QuestionProgress` | `src/components/QuestionProgress.tsx` | `GameScreen` — «السؤال 2 من 5» وشريط الخطوات |
+| `QuestionTimer` | `src/components/QuestionTimer.tsx` | `GameScreen` — الثواني الباقية وشريط يقصر، أحمر مع «أسرع!» آخر 5 ثوانٍ |
+| `FiftyFiftyButton` | `src/components/FiftyFiftyButton.tsx` | `GameScreen` — 50/50 مرة وحدة لكل لعبة |
 | `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة «معلومات عامة» |
+
+## أين الأسئلة؟
+
+كل الأسئلة في `src/data/questions.ts`، بعيد عن الشاشات والمكوّنات. كل سؤال فيه:
+`id`، الفئة (`category`)، اللغة (`language`)، نص السؤال (`question`)،
+الإجابة الصحيحة (`correctAnswer`)، وثلاث إجابات خطأ (`incorrectAnswers`).
+مصدر الإنترنت يوم الثلاثاء يرجّع نفس الشكل `Question[]`، و`getLocalQuestions` يتحقق منه.
+
+## نسخة الويب (Vercel)
+
+`vercel.json` يبني بـ `npx expo export -p web` ويخدم مجلد `dist` كتطبيق صفحة وحدة.
+المستودع مربوط بـ Vercel، وكل push على `main` ينشر نسخة جديدة تلقائيًا.
 
 ## ملاحظات تصميمية
 

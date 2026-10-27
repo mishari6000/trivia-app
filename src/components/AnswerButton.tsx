@@ -28,6 +28,20 @@ const statusText: Partial<Record<AnswerStatus, string>> = {
 };
 
 export function AnswerButton({ label, language, status, disabled, onPress }: AnswerButtonProps) {
+  // Removed by 50/50: keep the slot so nothing shifts, but it is not a button any more.
+  if (status === 'removed') {
+    return (
+      <View
+        style={[styles.button, styles.removed]}
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Text style={styles.removedMark}>✂︎</Text>
+      </View>
+    );
+  }
+
   const icon = statusIcon[status];
   const isSolid = status === 'correct' || status === 'incorrect';
 
@@ -96,6 +110,16 @@ const styles = StyleSheet.create({
   },
   dimmed: {
     opacity: 0.55,
+  },
+  removed: {
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderStyle: 'dashed',
+    opacity: 0.6,
+  },
+  removedMark: {
+    fontSize: 18,
+    color: colors.inkMuted,
   },
   label: {
     flex: 1,

@@ -1,34 +1,56 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { FeedbackOutcome } from '../game/answerStatus';
 import { colors, fonts, radius, spacing } from '../theme/theme';
 
 type FeedbackBannerProps = {
   /** null keeps the reserved space empty so the layout does not jump. */
-  isCorrect: boolean | null;
-  /** Shown under a wrong answer as «الإجابة الصحيحة: …». */
+  outcome: FeedbackOutcome | null;
+  /** Shown after a wrong answer or a timeout as «الإجابة الصحيحة: …». */
   correctAnswer?: string | null;
 };
 
-export function FeedbackBanner({ isCorrect, correctAnswer }: FeedbackBannerProps) {
-  if (isCorrect === null) {
+const content: Record<
+  FeedbackOutcome,
+  { icon: keyof typeof Ionicons.glyphMap; text: string; color: string; background: string }
+> = {
+  correct: {
+    icon: 'checkmark-circle',
+    text: 'صح عليك!',
+    color: colors.success,
+    background: colors.successSoft,
+  },
+  incorrect: {
+    icon: 'close-circle',
+    text: 'مو هذي الإجابة',
+    color: colors.error,
+    background: colors.errorSoft,
+  },
+  timeout: {
+    icon: 'time',
+    text: 'انتهى الوقت',
+    color: colors.error,
+    background: colors.errorSoft,
+  },
+};
+
+export function FeedbackBanner({ outcome, correctAnswer }: FeedbackBannerProps) {
+  if (outcome === null) {
     return <View style={styles.placeholder} />;
   }
 
-  const color = isCorrect ? colors.success : colors.error;
+  const { icon, text, color, background } = content[outcome];
   return (
     <View
-      style={[
-        styles.banner,
-        { borderColor: color, backgroundColor: isCorrect ? colors.successSoft : colors.errorSoft },
-      ]}
+      style={[styles.banner, { borderColor: color, backgroundColor: background }]}
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
     >
-      <Ionicons name={isCorrect ? 'checkmark-circle' : 'close-circle'} size={28} color={color} />
+      <Ionicons name={icon} size={28} color={color} />
       <View style={styles.texts}>
-        <Text style={[styles.text, { color }]}>{isCorrect ? 'صح عليك!' : 'مو هذي الإجابة'}</Text>
-        {!isCorrect && correctAnswer ? (
+        <Text style={[styles.text, { color }]}>{text}</Text>
+        {outcome !== 'correct' && correctAnswer ? (
           <Text style={styles.reveal}>الإجابة الصحيحة: {correctAnswer}</Text>
         ) : null}
       </View>

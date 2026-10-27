@@ -2,6 +2,9 @@ import { getLocalQuestions } from '../../data/getLocalQuestions';
 import { getAnswerStatus, getRevealedAnswer } from '../answerStatus';
 import { createInitialState, gameReducer, type GameState } from '../gameReducer';
 
+// A moment well inside the first question's 15-second window.
+const T = 1000;
+
 const setup = () => {
   const state = createInitialState(getLocalQuestions());
   const question = state.questions[0];
@@ -24,7 +27,7 @@ describe('answer reveal', () => {
 
   it('after a wrong answer marks the pick wrong and reveals the right one', () => {
     const { state, correct, wrong } = setup();
-    const after = gameReducer(state, { type: 'answer', optionId: wrong[0].id });
+    const after = gameReducer(state, { type: 'answer', now: T, optionId: wrong[0].id });
 
     const s = statuses(after);
     expect(s[wrong[0].id]).toBe('incorrect');
@@ -36,11 +39,11 @@ describe('answer reveal', () => {
 
   it('revealing never awards a point and options stay locked', () => {
     const { state, correct, wrong } = setup();
-    let after = gameReducer(state, { type: 'answer', optionId: wrong[0].id });
+    let after = gameReducer(state, { type: 'answer', now: T, optionId: wrong[0].id });
     expect(after.score).toBe(0);
 
     // Tapping the revealed correct answer afterwards changes nothing.
-    after = gameReducer(after, { type: 'answer', optionId: correct.id });
+    after = gameReducer(after, { type: 'answer', now: T, optionId: correct.id });
     expect(after.score).toBe(0);
     expect(after.selectedOptionId).toBe(wrong[0].id);
     expect(getAnswerStatus(after, correct.id)).toBe('revealed');
@@ -48,7 +51,7 @@ describe('answer reveal', () => {
 
   it('a correct answer still awards exactly one point with no reveal', () => {
     const { state, correct, wrong } = setup();
-    const after = gameReducer(state, { type: 'answer', optionId: correct.id });
+    const after = gameReducer(state, { type: 'answer', now: T, optionId: correct.id });
 
     expect(after.score).toBe(1);
     const s = statuses(after);
@@ -60,9 +63,8 @@ describe('answer reveal', () => {
 
   it('clears the reveal on the next question', () => {
     const { state, wrong } = setup();
-    const next = gameReducer(gameReducer(state, { type: 'answer', optionId: wrong[0].id }), {
-      type: 'next',
-    });
+    const answered = gameReducer(state, { type: 'answer', now: T, optionId: wrong[0].id });
+    const next = gameReducer(answered, { type: 'next', now: T });
     expect(Object.values(statuses(next))).toEqual(['idle', 'idle', 'idle', 'idle']);
     expect(getRevealedAnswer(next)).toBeNull();
   });
