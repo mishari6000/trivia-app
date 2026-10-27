@@ -1,5 +1,5 @@
 import { getLocalQuestions } from '../data/getLocalQuestions';
-import { fetchOpenTriviaQuestions, OpenTriviaError } from '../data/openTrivia';
+import { fetchOpenTriviaQuestions, OpenTriviaError, type FetchOptions } from '../data/openTrivia';
 import type { CategoryName, PlayableQuestion, QuestionSource } from '../types/question';
 import { prepareSession, QUESTIONS_PER_GAME } from './shuffle';
 
@@ -13,7 +13,7 @@ const ONLINE_FETCH_AMOUNT = 10;
 export async function loadSession(
   category: CategoryName,
   source: QuestionSource,
-  options: { signal?: AbortSignal; fetchImpl?: typeof fetch; sleep?: (ms: number) => Promise<void> } = {},
+  options: Pick<FetchOptions, 'signal' | 'onWait' | 'fetchImpl' | 'sleep'> = {},
 ): Promise<PlayableQuestion[]> {
   if (source === 'local') return prepareSession(getLocalQuestions(category));
 

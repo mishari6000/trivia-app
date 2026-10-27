@@ -97,9 +97,14 @@ export function rateLimitDelay(now: number, lastRequestAt: number | null): numbe
 let lastRequestAt: number | null = null;
 const MAX_ATTEMPTS = 4;
 
-type FetchOptions = {
+/** Why the client is waiting before a request: the normal gap, or a retry after a 429. */
+export type WaitReason = 'gap' | 'rate-limit';
+
+export type FetchOptions = {
   amount?: number;
   signal?: AbortSignal;
+  /** Called before any non-zero wait, so the UI can say what is happening and for how long. */
+  onWait?: (ms: number, reason: WaitReason) => void;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
@@ -110,11 +115,20 @@ const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(r
 /** Fetches multiple-choice questions for a category, waiting out the rate limit if needed. */
 export async function fetchOpenTriviaQuestions(
   category: CategoryName,
-  { amount = 10, signal, fetchImpl = fetch, sleep = defaultSleep, now = Date.now }: FetchOptions = {},
+  {
+    amount = 10,
+    signal,
+    onWait,
+    fetchImpl = fetch,
+    sleep = defaultSleep,
+    now = Date.now,
+  }: FetchOptions = {},
 ): Promise<PlayableQuestion[]> {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     // After a rejection the server restarts its window, so back off a little more each time.
-    await sleep(rateLimitDelay(now(), lastRequestAt) + attempt * BACKOFF_STEP_MS);
+    const wait = rateLimitDelay(now(), lastRequestAt) + attempt * BACKOFF_STEP_MS;
+    if (wait > 0) onWait?.(wait, attempt > 0 ? 'rate-limit' : 'gap');
+    await sleep(wait);
     if (signal?.aborted) throw new OpenTriviaError('network', 'Aborted');
     lastRequestAt = now();
 

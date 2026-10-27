@@ -1,5 +1,5 @@
 import type { Question } from '../../types/question';
-import { categoriesFor, getCategory } from '../categories';
+import { categoriesFor, getCategory, pickOtherCategory } from '../categories';
 import { getLocalQuestions, toPlayableQuestion } from '../getLocalQuestions';
 
 const base: Question = {
@@ -42,6 +42,17 @@ describe('getLocalQuestions', () => {
     expect(all.map((c) => c.openTriviaId)).toEqual(Array.from({ length: 24 }, (_, i) => 9 + i));
     categoriesFor('local').forEach((c) => expect(all).toContain(c));
     expect(getCategory('General Knowledge').openTriviaId).toBe(9);
+  });
+
+  it('«جرّب فئة ثانية» always picks a different category from the same source', () => {
+    for (const source of ['local', 'online'] as const) {
+      const list = categoriesFor(source);
+      for (let i = 0; i < 20; i++) {
+        const picked = pickOtherCategory('Geography', source, () => i / 20);
+        expect(picked).not.toBe('Geography');
+        expect(list.map((c) => c.name)).toContain(picked);
+      }
+    }
   });
 
   it('rejects empty content', () => {

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '../theme/theme';
+import { secondsInArabic } from '../utils/arabic';
 import { ProgressRing } from './ProgressRing';
 
 type QuestionTimerProps = {
@@ -9,14 +10,6 @@ type QuestionTimerProps = {
 };
 
 const URGENT_SECONDS = 5;
-
-/** Arabic number agreement: ثانية واحدة، ثانيتان، 3–10 ثوانٍ، 11+ ثانية. */
-function secondsInArabic(n: number): string {
-  if (n === 1) return 'ثانية واحدة';
-  if (n === 2) return 'ثانيتان';
-  if (n <= 10) return `${n} ثوانٍ`;
-  return `${n} ثانية`;
-}
 
 /** Countdown ring. The last five seconds turn red with «أسرع!», never flash. */
 export function QuestionTimer({ remainingMs, totalMs }: QuestionTimerProps) {

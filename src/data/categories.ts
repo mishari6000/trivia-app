@@ -214,3 +214,13 @@ export function categoriesFor(source: QuestionSource): Category[] {
   if (source === 'online') return categories;
   return LOCAL_ORDER.filter(hasLocalQuestions).map(getCategory);
 }
+
+/** A different category from the same source, for «جرّب فئة ثانية». */
+export function pickOtherCategory(
+  current: CategoryName,
+  source: QuestionSource,
+  random: () => number = Math.random,
+): CategoryName {
+  const others = categoriesFor(source).filter((c) => c.name !== current);
+  return others[Math.floor(random() * others.length)]?.name ?? current;
+}

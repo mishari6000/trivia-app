@@ -130,6 +130,31 @@ describe('Open Trivia DB adapter', () => {
     expect(calls).toEqual([0, REQUEST_GAP_MS + BACKOFF_STEP_MS]);
   });
 
+  it('tells the screen how long it waits and why (normal gap vs busy server)', async () => {
+    const results = Array.from({ length: 5 }, (_, i) => item(`Q${i}?`, `A${i}`, [`B${i}`, `C${i}`, `D${i}`]));
+    let calls = 0;
+    const impl = (async () => {
+      calls++;
+      if (calls === 2) return { ok: false, status: 429, json: async () => ({}) };
+      return { ok: true, status: 200, json: async () => ok(results) };
+    }) as unknown as typeof fetch;
+    let clock = 0;
+    const waits: [number, string][] = [];
+    const opts = {
+      fetchImpl: impl,
+      sleep: async (ms: number) => { clock += ms; },
+      now: () => clock,
+      onWait: (ms: number, reason: string) => waits.push([ms, reason]),
+    };
+    await fetchOpenTriviaQuestions('Art', opts); // first request: no wait
+    clock += 1_000;
+    await fetchOpenTriviaQuestions('Art', opts); // too soon → gap, then 429 → rate-limit
+    expect(waits).toEqual([
+      [REQUEST_GAP_MS - 1_000, 'gap'],
+      [REQUEST_GAP_MS + BACKOFF_STEP_MS, 'rate-limit'],
+    ]);
+  });
+
   it('gives up with a rate-limit error after repeated 429s', async () => {
     const impl = (async () => ({ ok: false, status: 429, json: async () => ({}) })) as unknown as typeof fetch;
     await expect(fetchOpenTriviaQuestions('Art', { fetchImpl: impl, sleep: noSleep })).rejects.toMatchObject({

@@ -54,6 +54,7 @@ export default function App() {
           category={category}
           source={source}
           onExit={() => setScreen('welcome')}
+          onChangeCategory={setCategory}
         />
       ) : null}
     </SafeAreaProvider>
