@@ -1,4 +1,4 @@
-import type { PlayableQuestion, Question } from '../types/question';
+import type { CategoryName, PlayableQuestion, Question } from '../types/question';
 import { questions } from './questions';
 
 const normalize = (text: string) => text.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -31,6 +31,9 @@ export function toPlayableQuestion(raw: Question): PlayableQuestion {
   };
 }
 
-export function getLocalQuestions(): PlayableQuestion[] {
-  return questions.map(toPlayableQuestion);
+/** Validated local questions, optionally for one category only. */
+export function getLocalQuestions(category?: CategoryName): PlayableQuestion[] {
+  return questions
+    .filter((q) => category === undefined || q.category === category)
+    .map(toPlayableQuestion);
 }

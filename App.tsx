@@ -10,12 +10,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GameScreen } from './src/screens/GameScreen';
 import { WelcomeScreen } from './src/screens/WelcomeScreen';
+import { DEFAULT_CATEGORY } from './src/data/categories';
 import { colors } from './src/theme/theme';
+import type { CategoryName } from './src/types/question';
 
 type Screen = 'welcome' | 'game';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('welcome');
+  const [category, setCategory] = useState<CategoryName>(DEFAULT_CATEGORY);
   // Fonts ship inside the app bundle; nothing is downloaded at runtime.
   const [fontsLoaded, fontError] = useFonts({
     Tajawal_400Regular,
@@ -32,7 +35,15 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       {/* GameScreen mounts with a fresh game, so Start always begins at score zero. */}
-      {screen === 'welcome' ? <WelcomeScreen onStart={() => setScreen('game')} /> : <GameScreen />}
+      {screen === 'welcome' ? (
+        <WelcomeScreen
+          selectedCategory={category}
+          onSelectCategory={setCategory}
+          onStart={() => setScreen('game')}
+        />
+      ) : (
+        <GameScreen category={category} onChangeCategory={() => setScreen('welcome')} />
+      )}
     </SafeAreaProvider>
   );
 }

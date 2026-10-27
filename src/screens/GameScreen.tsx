@@ -13,12 +13,19 @@ import { QuestionTimer } from '../components/QuestionTimer';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { ScreenLayout } from '../components/ScreenLayout';
+import { getCategory } from '../data/categories';
 import { getAnswerStatus, getFeedbackOutcome, getRevealedAnswer } from '../game/answerStatus';
 import { getQuestionProgress } from '../game/progress';
 import { useTriviaGame } from '../game/useTriviaGame';
 import { colors, fonts, MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
+import type { CategoryName } from '../types/question';
 
-export function GameScreen() {
+type GameScreenProps = {
+  category: CategoryName;
+  onChangeCategory: () => void;
+};
+
+export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
   const {
     state,
     currentQuestion,
@@ -31,7 +38,7 @@ export function GameScreen() {
     next,
     restart,
     applyFiftyFifty,
-  } = useTriviaGame();
+  } = useTriviaGame(category);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const isResults = state.phase === 'results';
   const progress = getQuestionProgress(state);
@@ -49,7 +56,7 @@ export function GameScreen() {
           <View style={styles.header}>
             <View style={styles.titleBlock}>
               <GameTitle size="compact" />
-              <CategoryBadge label="معلومات عامة" />
+              <CategoryBadge label={getCategory(category).label} />
             </View>
             <ScoreBadge score={state.score} />
           </View>
@@ -63,7 +70,12 @@ export function GameScreen() {
       }
     >
       {isResults || !currentQuestion ? (
-        <ResultsPanel score={state.score} total={totalQuestions} onPlayAgain={restart} />
+        <ResultsPanel
+          score={state.score}
+          total={totalQuestions}
+          onPlayAgain={restart}
+          onChangeCategory={onChangeCategory}
+        />
       ) : (
         <View style={styles.playArea}>
           <QuestionCard

@@ -1,6 +1,6 @@
 # تحدّي اليمعة — Trivia on Your Phone
 
-لعبة أسئلة فردية بالعربي (فئة **معلومات عامة / General Knowledge**)، مبنية بـ
+لعبة أسئلة فردية بالعربي في **6 فئات**: معلومات عامة، علوم وطبيعة، جغرافيا، تاريخ، رياضة، حيوانات، مبنية بـ
 React Native + Expo (SDK 58) + TypeScript، وتشتغل على Expo Go (iOS / Android) وعلى الويب عبر React Native Web.
 
 ## التشغيل
@@ -36,7 +36,8 @@ npx expo start --tunnel
 App.tsx                         تحميل الخط (Tajawal مضمّن) + التبديل بين شاشة البداية واللعبة
 src/
   types/question.ts             نوع Question المشترك + PlayableQuestion
-  data/questions.ts             بنك الأسئلة المحلي: 10 أسئلة (خارج JSX)
+  data/questions.ts             بنك الأسئلة المحلي: 10 أسئلة لكل فئة، 60 سؤال (خارج JSX)
+  data/categories.ts            الفئات: الاسم العربي، رقم Open Trivia DB، الصورة
   data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
   game/gameReducer.ts           حالات اللعبة + المؤقّت (deadline) + 50/50؛ كل سؤال ينحسم مرة وحدة
   game/fiftyFifty.ts            اختيار إجابتين خطأ للحذف
@@ -66,11 +67,12 @@ src/
 | `QuestionProgress` | `src/components/QuestionProgress.tsx` | `GameScreen` — «السؤال 2 من 5» وشريط الخطوات |
 | `QuestionTimer` | `src/components/QuestionTimer.tsx` | `GameScreen` — الثواني الباقية وشريط يقصر، أحمر مع «أسرع!» آخر 5 ثوانٍ |
 | `FiftyFiftyButton` | `src/components/FiftyFiftyButton.tsx` | `GameScreen` — 50/50 مرة وحدة لكل لعبة |
-| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة «معلومات عامة» |
+| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة قابلة للاختيار (6 بطاقات) |
+| `SecondaryButton` | `src/components/SecondaryButton.tsx` | `ResultsPanel` — «غيّر الفئة» |
 
 ## أين الأسئلة؟
 
-كل الأسئلة في `src/data/questions.ts`، بعيد عن الشاشات والمكوّنات. كل سؤال فيه:
+كل الأسئلة في `src/data/questions.ts` (10 لكل فئة)، بعيد عن الشاشات والمكوّنات. كل سؤال فيه:
 `id`، الفئة (`category`)، اللغة (`language`)، نص السؤال (`question`)،
 الإجابة الصحيحة (`correctAnswer`)، وثلاث إجابات خطأ (`incorrectAnswers`).
 مصدر الإنترنت يوم الثلاثاء يرجّع نفس الشكل `Question[]`، و`getLocalQuestions` يتحقق منه.
@@ -80,6 +82,8 @@ src/
 `vercel.json` يبني بـ `npx expo export -p web` ويخدم مجلد `dist` كتطبيق صفحة وحدة.
 المستودع مربوط بـ Vercel، وكل push على `main` ينشر نسخة جديدة تلقائيًا.
 
+**الرابط:** https://trivia-app-phi-two.vercel.app
+
 ## ملاحظات تصميمية
 
 - **الصحّة بالمعرّف لا بالموقع:** كل إجابة لها `id` ثابت، والإجابة الصحيحة تُعرف بـ `correctOptionId`.
@@ -87,8 +91,8 @@ src/
 - **RTL محصور بالشاشة:** `direction: 'rtl'` على native و `dir="rtl"` على الويب — بدون `I18nManager.forceRTL`.
   اتجاه نص السؤال والإجابات يتحدد من `language` لكل سؤال، فالأسئلة الإنجليزية مستقبلًا تظهر LTR.
 - **الخط:** Tajawal (رخصة OFL) مضمّن من `@expo-google-fonts/tajawal`؛ لا يوجد طلب خط من الإنترنت وقت التشغيل.
-- **رسمة الفئة:** `assets/images/category-general.png` مولّدة بـ kie.ai عبر
-  `node scripts/generate-category-art.mjs` (يطلب مفتاح API بإدخال مخفي، أو من `KIE_API_KEY`).
+- **رسومات الفئات:** `assets/images/category-*.png` مولّدة بـ kie.ai عبر
+  `node scripts/generate-category-art.mjs [slug ...]` (يطلب مفتاح API بإدخال مخفي، أو من `KIE_API_KEY`).
   المفتاح لا يُحفظ في ملف ولا يوضع في التطبيق أو GitHub.
 
 ## اختبار الهاتف

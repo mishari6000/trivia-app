@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { getLocalQuestions } from '../data/getLocalQuestions';
+import type { CategoryName } from '../types/question';
 import { pickFiftyFiftyRemovals } from './fiftyFifty';
 import {
   createInitialState,
@@ -13,14 +14,14 @@ import {
 import { prepareSession } from './shuffle';
 
 /** A fresh session: questions and answer orders are picked once here, never during rendering. */
-const newSession = () => prepareSession(getLocalQuestions());
+const newSession = (category: CategoryName) => prepareSession(getLocalQuestions(category));
 
 /** How often the countdown display refreshes. Resolution itself is deadline-based. */
 const TICK_MS = 200;
 
-export function useTriviaGame() {
+export function useTriviaGame(category: CategoryName) {
   const [state, dispatch] = useReducer(gameReducer, undefined, () =>
-    createInitialState(newSession(), Date.now()),
+    createInitialState(newSession(category), Date.now()),
   );
   const [now, setNow] = useState(() => Date.now());
   const [isAppActive, setAppActive] = useState(AppState.currentState !== 'background');
@@ -75,8 +76,8 @@ export function useTriviaGame() {
   );
   const next = useCallback(() => dispatch({ type: 'next', now: Date.now() }), []);
   const restart = useCallback(
-    () => dispatch({ type: 'restart', questions: newSession(), now: Date.now() }),
-    [],
+    () => dispatch({ type: 'restart', questions: newSession(category), now: Date.now() }),
+    [category],
   );
   const currentQuestion = state.questions[state.currentIndex];
   const applyFiftyFifty = useCallback(() => {

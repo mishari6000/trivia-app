@@ -1,3 +1,4 @@
+import { categories } from '../../data/categories';
 import { getLocalQuestions } from '../../data/getLocalQuestions';
 import { questions as questionBank } from '../../data/questions';
 import { createInitialState, gameReducer } from '../gameReducer';
@@ -63,27 +64,33 @@ describe('prepareSession', () => {
     });
   });
 
-  it('picks five unique questions from the bank', () => {
-    const bankIds = new Set(questionBank.map((q) => q.id));
-    for (let seed = 1; seed <= 50; seed++) {
-      const ids = prepareSession(getLocalQuestions(), seeded(seed)).map((q) => q.id);
-      expect(ids).toHaveLength(QUESTIONS_PER_GAME);
-      expect(new Set(ids).size).toBe(QUESTIONS_PER_GAME);
-      ids.forEach((id) => expect(bankIds.has(id)).toBe(true));
-    }
+  it('picks five unique questions from the chosen category only', () => {
+    categories.forEach(({ name }) => {
+      const categoryIds = new Set(questionBank.filter((q) => q.category === name).map((q) => q.id));
+      for (let seed = 1; seed <= 20; seed++) {
+        const session = prepareSession(getLocalQuestions(name), seeded(seed));
+        const ids = session.map((q) => q.id);
+        expect(ids).toHaveLength(QUESTIONS_PER_GAME);
+        expect(new Set(ids).size).toBe(QUESTIONS_PER_GAME);
+        ids.forEach((id) => expect(categoryIds.has(id)).toBe(true));
+        session.forEach((q) => expect(q.category).toBe(name));
+      }
+    });
   });
 
-  it('uses every bank question across sessions and varies the selection', () => {
+  it('uses every question of a category across sessions and varies the selection', () => {
     const random = seeded(11);
-    const used = new Set<string>();
-    const selections = new Set<string>();
-    for (let i = 0; i < 200; i++) {
-      const ids = prepareSession(getLocalQuestions(), random).map((q) => q.id);
-      ids.forEach((id) => used.add(id));
-      selections.add([...ids].sort().join(','));
-    }
-    expect(used.size).toBe(questionBank.length);
-    expect(selections.size).toBeGreaterThan(1);
+    categories.forEach(({ name }) => {
+      const used = new Set<string>();
+      const selections = new Set<string>();
+      for (let i = 0; i < 200; i++) {
+        const ids = prepareSession(getLocalQuestions(name), random).map((q) => q.id);
+        ids.forEach((id) => used.add(id));
+        selections.add([...ids].sort().join(','));
+      }
+      expect(used.size).toBe(10);
+      expect(selections.size).toBeGreaterThan(1);
+    });
   });
 
   it('does not mutate the question bank or the source questions', () => {

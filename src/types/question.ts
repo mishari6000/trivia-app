@@ -1,9 +1,18 @@
 export type QuestionLanguage = 'ar' | 'en';
 
+/** Category names match Open Trivia DB, so Tuesday's internet questions map straight in. */
+export type CategoryName =
+  | 'General Knowledge'
+  | 'Science & Nature'
+  | 'Geography'
+  | 'History'
+  | 'Sports'
+  | 'Animals';
+
 /** Raw question shape. Future internet/AI sources must return this same shape. */
 export type Question = {
   id: string;
-  category: 'General Knowledge';
+  category: CategoryName;
   language: QuestionLanguage;
   question: string;
   correctAnswer: string;

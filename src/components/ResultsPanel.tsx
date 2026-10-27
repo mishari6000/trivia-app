@@ -4,14 +4,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, spacing } from '../theme/theme';
 import { FramedCard } from './FramedCard';
 import { PrimaryButton } from './PrimaryButton';
+import { SecondaryButton } from './SecondaryButton';
 
 type ResultsPanelProps = {
   score: number;
   total: number;
   onPlayAgain: () => void;
+  onChangeCategory: () => void;
 };
 
-export function ResultsPanel({ score, total, onPlayAgain }: ResultsPanelProps) {
+export function ResultsPanel({ score, total, onPlayAgain, onChangeCategory }: ResultsPanelProps) {
   return (
     <View style={styles.container}>
       <FramedCard style={styles.card}>
@@ -22,7 +24,10 @@ export function ResultsPanel({ score, total, onPlayAgain }: ResultsPanelProps) {
           نتيجتك: {score} من {total}
         </Text>
       </FramedCard>
-      <PrimaryButton label="العب مرة ثانية" onPress={onPlayAgain} />
+      <View style={styles.actions}>
+        <PrimaryButton label="العب مرة ثانية" onPress={onPlayAgain} />
+        <SecondaryButton label="غيّر الفئة" onPress={onChangeCategory} />
+      </View>
     </View>
   );
 }
@@ -30,6 +35,9 @@ export function ResultsPanel({ score, total, onPlayAgain }: ResultsPanelProps) {
 const styles = StyleSheet.create({
   container: {
     gap: spacing.xl,
+  },
+  actions: {
+    gap: spacing.md,
   },
   card: {
     alignItems: 'center',
