@@ -4,6 +4,7 @@ import {
   fromApiResult,
   OpenTriviaError,
   parseResponse,
+  BACKOFF_STEP_MS,
   REQUEST_GAP_MS,
   rateLimitDelay,
   resetRateLimit,
@@ -126,7 +127,7 @@ describe('Open Trivia DB adapter', () => {
       now: () => clock,
     });
     expect(questions).toHaveLength(5);
-    expect(calls).toEqual([0, REQUEST_GAP_MS]);
+    expect(calls).toEqual([0, REQUEST_GAP_MS + BACKOFF_STEP_MS]);
   });
 
   it('gives up with a rate-limit error after repeated 429s', async () => {

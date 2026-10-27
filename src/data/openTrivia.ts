@@ -10,8 +10,10 @@ import { toPlayableQuestion } from './getLocalQuestions';
 export const OPEN_TRIVIA_API = 'https://opentdb.com/api.php';
 /** The API allows one request per IP every 5 seconds. */
 export const RATE_LIMIT_MS = 5_000;
-/** Gap the app keeps between requests: the limit plus a small safety margin. */
-export const REQUEST_GAP_MS = RATE_LIMIT_MS + 500;
+/** Gap the app keeps between requests: the limit plus a safety margin (it is enforced a bit strictly). */
+export const REQUEST_GAP_MS = RATE_LIMIT_MS + 1_000;
+/** Extra wait after each 429, so a shared network (phone + laptop) can still get through. */
+export const BACKOFF_STEP_MS = 3_000;
 
 export type OpenTriviaErrorKind = 'network' | 'no-results' | 'rate-limit' | 'invalid' | 'unknown';
 
@@ -93,7 +95,7 @@ export function rateLimitDelay(now: number, lastRequestAt: number | null): numbe
 }
 
 let lastRequestAt: number | null = null;
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = 4;
 
 type FetchOptions = {
   amount?: number;
@@ -111,7 +113,8 @@ export async function fetchOpenTriviaQuestions(
   { amount = 10, signal, fetchImpl = fetch, sleep = defaultSleep, now = Date.now }: FetchOptions = {},
 ): Promise<PlayableQuestion[]> {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    await sleep(rateLimitDelay(now(), lastRequestAt));
+    // After a rejection the server restarts its window, so back off a little more each time.
+    await sleep(rateLimitDelay(now(), lastRequestAt) + attempt * BACKOFF_STEP_MS);
     if (signal?.aborted) throw new OpenTriviaError('network', 'Aborted');
     lastRequestAt = now();
 
