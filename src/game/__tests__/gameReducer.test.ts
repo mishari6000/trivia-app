@@ -1,4 +1,5 @@
 import { getLocalQuestions } from '../../data/getLocalQuestions';
+import { prepareSession } from '../shuffle';
 import { createInitialState, gameReducer, type GameAction, type GameState } from '../gameReducer';
 
 const play = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state);
@@ -12,7 +13,7 @@ describe('gameReducer', () => {
   let initial: GameState;
 
   beforeEach(() => {
-    initial = createInitialState(getLocalQuestions());
+    initial = createInitialState(prepareSession(getLocalQuestions()));
   });
 
   it('starts at question one with score zero', () => {
@@ -97,7 +98,10 @@ describe('gameReducer', () => {
     }
     expect(state.score).toBe(5);
 
-    const restarted = play(state, { type: 'restart', questions: getLocalQuestions() });
-    expect(restarted).toEqual(initial);
+    const fresh = prepareSession(getLocalQuestions());
+    const restarted = play(state, { type: 'restart', questions: fresh });
+    expect(restarted).toEqual(createInitialState(fresh));
+    expect(restarted.score).toBe(0);
+    expect(restarted.currentIndex).toBe(0);
   });
 });

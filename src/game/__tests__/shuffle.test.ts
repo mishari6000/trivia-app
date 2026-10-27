@@ -1,7 +1,7 @@
 import { getLocalQuestions } from '../../data/getLocalQuestions';
 import { questions as questionBank } from '../../data/questions';
 import { createInitialState, gameReducer } from '../gameReducer';
-import { prepareSession, shuffle, type RandomSource } from '../shuffle';
+import { prepareSession, QUESTIONS_PER_GAME, shuffle, type RandomSource } from '../shuffle';
 
 /** Deterministic random source (mulberry32) so tests never depend on luck. */
 function seeded(seed: number): RandomSource {
@@ -46,9 +46,9 @@ describe('prepareSession', () => {
     const source = getLocalQuestions();
     const session = prepareSession(source, seeded(7));
 
-    session.forEach((question, i) => {
-      const original = source[i];
-      expect(question.id).toBe(original.id);
+    session.forEach((question) => {
+      const original = source.find((q) => q.id === question.id)!;
+      const raw = questionBank.find((q) => q.id === question.id)!;
       expect(question.options).toHaveLength(4);
       expect(new Set(question.options.map((o) => o.id)).size).toBe(4);
       expect(sorted(question.options.map((o) => o.id))).toEqual(
@@ -56,8 +56,31 @@ describe('prepareSession', () => {
       );
       expect(question.correctOptionId).toBe(original.correctOptionId);
       const correct = question.options.find((o) => o.id === question.correctOptionId);
-      expect(correct?.text).toBe(questionBank[i].correctAnswer);
+      expect(correct?.text).toBe(raw.correctAnswer);
     });
+  });
+
+  it('picks five unique questions from the bank', () => {
+    const bankIds = new Set(questionBank.map((q) => q.id));
+    for (let seed = 1; seed <= 50; seed++) {
+      const ids = prepareSession(getLocalQuestions(), seeded(seed)).map((q) => q.id);
+      expect(ids).toHaveLength(QUESTIONS_PER_GAME);
+      expect(new Set(ids).size).toBe(QUESTIONS_PER_GAME);
+      ids.forEach((id) => expect(bankIds.has(id)).toBe(true));
+    }
+  });
+
+  it('uses every bank question across sessions and varies the selection', () => {
+    const random = seeded(11);
+    const used = new Set<string>();
+    const selections = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const ids = prepareSession(getLocalQuestions(), random).map((q) => q.id);
+      ids.forEach((id) => used.add(id));
+      selections.add([...ids].sort().join(','));
+    }
+    expect(used.size).toBe(questionBank.length);
+    expect(selections.size).toBeGreaterThan(1);
   });
 
   it('does not mutate the question bank or the source questions', () => {

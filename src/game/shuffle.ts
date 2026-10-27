@@ -13,16 +13,22 @@ export function shuffle<T>(items: readonly T[], random: RandomSource = Math.rand
   return result;
 }
 
+export const QUESTIONS_PER_GAME = 5;
+
 /**
- * Prepares a game session: each question gets its answer order shuffled once.
- * The stored order stays fixed for the whole game; correctness still uses option IDs.
+ * Prepares a game session once (on Start / Play again): picks `size` unique questions
+ * at random from the bank and shuffles each one's answers. The stored session stays
+ * fixed for the whole game; correctness still uses option IDs.
  */
 export function prepareSession(
-  questions: readonly PlayableQuestion[],
+  bank: readonly PlayableQuestion[],
   random: RandomSource = Math.random,
+  size: number = QUESTIONS_PER_GAME,
 ): PlayableQuestion[] {
-  return questions.map((question) => ({
-    ...question,
-    options: shuffle(question.options, random),
-  }));
+  return shuffle(bank, random)
+    .slice(0, size)
+    .map((question) => ({
+      ...question,
+      options: shuffle(question.options, random),
+    }));
 }

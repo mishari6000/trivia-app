@@ -11,14 +11,17 @@ const base: Question = {
 };
 
 describe('getLocalQuestions', () => {
-  it('returns five valid questions with four unique options each', () => {
+  it('returns exactly ten valid General Knowledge questions with unique IDs', () => {
     const questions = getLocalQuestions();
-    expect(questions).toHaveLength(5);
-    expect(new Set(questions.map((q) => q.id)).size).toBe(5);
+    expect(questions).toHaveLength(10);
+    expect(new Set(questions.map((q) => q.id)).size).toBe(10);
 
     questions.forEach((q) => {
+      expect(q.category).toBe('General Knowledge');
+      expect(q.question.length).toBeGreaterThan(0);
       expect(q.options).toHaveLength(4);
       expect(new Set(q.options.map((o) => o.id)).size).toBe(4);
+      expect(new Set(q.options.map((o) => o.text)).size).toBe(4);
       expect(q.options.filter((o) => o.id === q.correctOptionId)).toHaveLength(1);
     });
   });
