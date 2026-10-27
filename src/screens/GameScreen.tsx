@@ -7,9 +7,11 @@ import { FeedbackBanner } from '../components/FeedbackBanner';
 import { GameTitle } from '../components/GameTitle';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { QuestionCard } from '../components/QuestionCard';
+import { QuestionProgress } from '../components/QuestionProgress';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { ScreenLayout } from '../components/ScreenLayout';
+import { getQuestionProgress } from '../game/progress';
 import { useTriviaGame } from '../game/useTriviaGame';
 import { MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
 
@@ -18,6 +20,7 @@ export function GameScreen() {
     useTriviaGame();
   const scrollRef = useRef<ScrollViewInstance>(null);
   const isResults = state.phase === 'results';
+  const progress = getQuestionProgress(state);
 
   // Start each new question (and the results) from the top on small screens.
   useEffect(() => {
@@ -34,16 +37,18 @@ export function GameScreen() {
     <ScreenLayout
       scrollRef={scrollRef}
       header={
-        <View style={styles.header}>
-          <View style={styles.titleBlock}>
-            <GameTitle size="compact" />
-            <CategoryBadge label="معلومات عامة" />
+        <>
+          <View style={styles.header}>
+            <View style={styles.titleBlock}>
+              <GameTitle size="compact" />
+              <CategoryBadge label="معلومات عامة" />
+            </View>
+            <ScoreBadge score={state.score} />
           </View>
-          <ScoreBadge score={state.score} />
-        </View>
+          {isResults ? null : <QuestionProgress {...progress} />}
+        </>
       }
     >
-
       {isResults || !currentQuestion ? (
         <ResultsPanel score={state.score} total={totalQuestions} onPlayAgain={restart} />
       ) : (

@@ -61,6 +61,7 @@ src/
 | `ScreenLayout` | `src/components/ScreenLayout.tsx` | `WelcomeScreen` و `GameScreen` — الهيدر المنحني، المساحات الآمنة، التمرير، عمود RTL |
 | `FramedCard` | `src/components/FramedCard.tsx` | `QuestionCard` و `ResultsPanel` و `WelcomeScreen` — البطاقة بالإطار السماوي |
 | `GameTitle` | `src/components/GameTitle.tsx` | `WelcomeScreen` (كبير) و `GameScreen` (مصغّر) — شعار الاسم |
+| `QuestionProgress` | `src/components/QuestionProgress.tsx` | `GameScreen` — «السؤال 2 من 5» وشريط الخطوات |
 | `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة «معلومات عامة» |
 
 ## ملاحظات تصميمية
@@ -81,5 +82,6 @@ src/
 3. اضغط على الإجابات بسرعة؛ تُقبل إجابة واحدة فقط لكل سؤال.
 4. تأكد أن النتيجة النهائية تساوي عدد الإجابات الصحيحة.
 5. اضغط «العب مرة ثانية»؛ كل شي يرجع للبداية والنقاط صفر.
-6. العب 3 ألعاب ورا بعض؛ ترتيب الإجابات يتغيّر (ممكن يتكرر أحيانًا بالصدفة) وما يتحرك بعد الضغط.
-7. تأكد أن العربي واضح، والأزرار مريحة، وما في نص مقصوص.
+6. «السؤال 1 من 5» يزيد لين «5 من 5» وما يطلع 6، ويرجع 1 بعد «العب مرة ثانية».
+7. العب 3 ألعاب ورا بعض؛ ترتيب الإجابات يتغيّر (ممكن يتكرر أحيانًا بالصدفة) وما يتحرك بعد الضغط.
+8. تأكد أن العربي واضح، والأزرار مريحة، وما في نص مقصوص.
