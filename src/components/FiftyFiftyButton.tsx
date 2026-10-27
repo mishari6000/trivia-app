@@ -27,7 +27,11 @@ export function FiftyFiftyButton({ used, disabled, onPress }: FiftyFiftyButtonPr
         isDisabled && styles.disabled,
       ]}
     >
-      <Ionicons name="cut" size={20} color={isDisabled ? colors.inkMuted : colors.logoShadow} />
+      <Ionicons
+        name="cut"
+        size={20}
+        color={isDisabled ? colors.textMuted : colors.primaryBright}
+      />
       <Text style={[styles.label, isDisabled && styles.labelDisabled]}>{label}</Text>
     </Pressable>
   );
@@ -41,25 +45,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     borderRadius: radius.pill,
-    borderWidth: 2,
-    borderColor: colors.logoShadow,
-    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.primaryBright,
+    backgroundColor: colors.primarySoft,
     paddingHorizontal: spacing.lg,
   },
   pressed: {
-    backgroundColor: colors.frameInner,
+    backgroundColor: colors.surfaceRaised,
   },
   disabled: {
     borderColor: colors.border,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
   },
   label: {
     fontFamily: fonts.extraBold,
     fontSize: 17,
     lineHeight: 26,
-    color: colors.logoShadow,
+    color: colors.primaryBright,
   },
   labelDisabled: {
-    color: colors.inkMuted,
+    color: colors.textMuted,
   },
 });

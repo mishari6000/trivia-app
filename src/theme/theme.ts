@@ -2,35 +2,36 @@ import type { TextStyle, ViewStyle } from 'react-native';
 
 import type { QuestionLanguage } from '../types/question';
 
+/** Dark navy surfaces with bright green accents. */
 export const colors = {
-  background: '#F5FBFC',
-  primary: '#1AA6C0',
-  primaryDark: '#12839A',
-  ink: '#16213E',
-  inkMuted: '#4A5872',
-  logoFill: '#3AB0E4',
-  logoShadow: '#2C3A8F',
-  accent: '#DDE23A',
-  accentPressed: '#C9CF2A',
-  sun: '#F6C445',
-  frame: '#A9DEE7',
-  frameInner: '#E3F4F7',
-  cardTop: '#F9DE84',
-  cardBand: '#F2B63C',
-  success: '#15803D',
-  successSoft: '#E6F4EA',
-  error: '#B91C1C',
-  errorSoft: '#FBE9E9',
-  surface: '#FFFFFF',
-  border: '#CDEAF0',
+  background: '#0A1620',
+  surface: '#122230',
+  surfaceRaised: '#1A2D3C',
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderStrong: 'rgba(255, 255, 255, 0.18)',
+  text: '#FFFFFF',
+  textMuted: '#9DB1BF',
+  textOnLight: '#0A1620',
+  primary: '#0E9F62',
+  primaryBright: '#22DD82',
+  primaryDeep: '#076B45',
+  primarySoft: 'rgba(34, 221, 130, 0.14)',
+  success: '#22DD82',
+  successSoft: 'rgba(34, 221, 130, 0.14)',
+  error: '#FF5A64',
+  errorSoft: 'rgba(255, 90, 100, 0.14)',
+  errorStrong: '#D63A45',
   white: '#FFFFFF',
+  whitePressed: '#DDE6EC',
+  glass: 'rgba(255, 255, 255, 0.12)',
 };
 
 /** CSS gradient strings for the `backgroundImage` style (Android, iOS and web). */
 export const gradients = {
-  header: `radial-gradient(circle at 50% 45%, #A6DCE1 0%, #4FBACB 45%, ${colors.primary} 100%)`,
-  accent: `linear-gradient(90deg, ${colors.accent} 0%, #EFEA86 100%)`,
-  card: `linear-gradient(180deg, ${colors.cardTop} 0%, #F7CF5E 100%)`,
+  hero: `linear-gradient(160deg, #13B573 0%, ${colors.primary} 45%, ${colors.primaryDeep} 100%)`,
+  banner: `linear-gradient(110deg, ${colors.primaryDeep} 0%, ${colors.primary} 60%, #14B877 100%)`,
+  correct: `linear-gradient(110deg, ${colors.primary} 0%, ${colors.primaryBright} 100%)`,
+  cardShade: 'linear-gradient(180deg, rgba(18, 34, 48, 0) 60%, rgba(18, 34, 48, 1) 100%)',
 };
 
 /** Tajawal is bundled with the app (no runtime network request). */
@@ -43,21 +44,12 @@ export const fonts = {
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 
-export const radius = { sm: 10, md: 16, lg: 24, xl: 32, pill: 999 };
+export const radius = { sm: 10, md: 16, lg: 22, xl: 30, pill: 999 };
 
 export const MAX_CONTENT_WIDTH = 480;
 export const MIN_BUTTON_HEIGHT = 56;
 
-export const shadow: ViewStyle = { boxShadow: '0px 8px 20px rgba(22, 33, 62, 0.10)' };
-
-/** Chunky offset shadow for the game title, in the spirit of a 3D sticker logo. */
-export const logoText: TextStyle = {
-  fontFamily: fonts.extraBold,
-  color: colors.logoFill,
-  textShadowColor: colors.logoShadow,
-  textShadowOffset: { width: 3, height: 4 },
-  textShadowRadius: 0,
-};
+export const shadow: ViewStyle = { boxShadow: '0px 10px 24px rgba(0, 0, 0, 0.35)' };
 
 /** Per-language text direction, so English questions can render LTR inside the Arabic UI. */
 export function textDirection(language: QuestionLanguage): TextStyle {

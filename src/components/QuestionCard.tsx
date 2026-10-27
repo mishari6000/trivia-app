@@ -22,8 +22,8 @@ export function QuestionCard({ question, language }: QuestionCardProps) {
 const styles = StyleSheet.create({
   text: {
     fontFamily: fonts.bold,
-    fontSize: 23,
-    lineHeight: 38,
-    color: colors.ink,
+    fontSize: 22,
+    lineHeight: 36,
+    color: colors.text,
   },
 });

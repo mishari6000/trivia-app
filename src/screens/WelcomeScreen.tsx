@@ -1,63 +1,62 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { CategoryTile } from '../components/CategoryTile';
-import { FramedCard } from '../components/FramedCard';
 import { GameTitle } from '../components/GameTitle';
-import { PrimaryButton } from '../components/PrimaryButton';
+import { InfoBanner } from '../components/InfoBanner';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { categories, getCategory } from '../data/categories';
+import { categories } from '../data/categories';
+import { getLocalQuestions } from '../data/getLocalQuestions';
+import { QUESTION_TIME_MS } from '../game/gameReducer';
 import { colors, fonts, spacing } from '../theme/theme';
 import type { CategoryName } from '../types/question';
 
 type WelcomeScreenProps = {
-  selectedCategory: CategoryName;
-  onSelectCategory: (category: CategoryName) => void;
-  onStart: () => void;
+  onStart: (category: CategoryName) => void;
 };
 
-/** Pairs of tiles, so the grid is two columns wide on every phone. */
+/** Pairs of cards, so the grid is two columns wide on every phone. */
 const rows = Array.from({ length: Math.ceil(categories.length / 2) }, (_, i) =>
   categories.slice(i * 2, i * 2 + 2),
 );
 
-export function WelcomeScreen({ selectedCategory, onSelectCategory, onStart }: WelcomeScreenProps) {
+export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
     <ScreenLayout
       header={
         <View style={styles.hero}>
           <GameTitle size="large" />
-          <Text style={styles.tagline}>اختار فئتك... وورّنا معلوماتك!</Text>
+          <View style={styles.greeting}>
+            <Text style={styles.hello}>هلا والله!</Text>
+            <Text style={styles.tagline}>جاهز تتحدّى معلوماتك؟</Text>
+          </View>
         </View>
       }
     >
-      <FramedCard style={styles.card}>
-        <Text style={styles.cardText}>
-          خمس أسئلة، لكل سؤال 15 ثانية وأربع إجابات. وعندك 50/50 مرة وحدة!
-        </Text>
-        <View style={styles.grid} accessibilityRole="radiogroup">
-          {rows.map((row) => (
-            <View key={row[0].name} style={styles.row}>
-              {row.map((category) => (
-                <CategoryTile
-                  key={category.name}
-                  label={category.label}
-                  image={category.image}
-                  icon={category.icon}
-                  selected={category.name === selectedCategory}
-                  onPress={() => onSelectCategory(category.name)}
-                />
-              ))}
-              {row.length === 1 ? <View style={styles.spacer} /> : null}
-            </View>
-          ))}
-        </View>
-      </FramedCard>
+      <InfoBanner
+        seconds={QUESTION_TIME_MS / 1000}
+        title="خمس أسئلة، لكل سؤال 15 ثانية"
+        subtitle="وعندك 50/50 مرة وحدة بكل لعبة!"
+      />
 
-      <View style={styles.actions}>
-        <PrimaryButton
-          label={`ابدأ التحدّي · ${getCategory(selectedCategory).label}`}
-          onPress={onStart}
-        />
+      <Text style={styles.section} accessibilityRole="header">
+        اختار فئتك
+      </Text>
+      <View style={styles.grid}>
+        {rows.map((row) => (
+          <View key={row[0].name} style={styles.row}>
+            {row.map((category) => (
+              <CategoryTile
+                key={category.name}
+                label={category.label}
+                questionCount={getLocalQuestions(category.name).length}
+                image={category.image}
+                icon={category.icon}
+                onStart={() => onStart(category.name)}
+              />
+            ))}
+            {row.length === 1 ? <View style={styles.spacer} /> : null}
+          </View>
+        ))}
       </View>
     </ScreenLayout>
   );
@@ -65,27 +64,30 @@ export function WelcomeScreen({ selectedCategory, onSelectCategory, onStart }: W
 
 const styles = StyleSheet.create({
   hero: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingTop: spacing.lg,
+    gap: spacing.xl,
+    paddingTop: spacing.sm,
+  },
+  greeting: {
+    gap: spacing.xs,
+  },
+  hello: {
+    fontFamily: fonts.extraBold,
+    fontSize: 30,
+    lineHeight: 44,
+    color: colors.text,
   },
   tagline: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    lineHeight: 32,
-    color: colors.ink,
-    textAlign: 'center',
-  },
-  card: {
-    gap: spacing.lg,
-    padding: spacing.lg,
-  },
-  cardText: {
     fontFamily: fonts.medium,
-    fontSize: 17,
-    lineHeight: 28,
-    color: colors.inkMuted,
-    textAlign: 'center',
+    fontSize: 19,
+    lineHeight: 30,
+    color: colors.textMuted,
+  },
+  section: {
+    fontFamily: fonts.extraBold,
+    fontSize: 20,
+    lineHeight: 30,
+    color: colors.text,
+    marginTop: spacing.sm,
   },
   grid: {
     gap: spacing.md,
@@ -96,9 +98,5 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
-  },
-  actions: {
-    marginTop: 'auto',
-    paddingTop: spacing.md,
   },
 });

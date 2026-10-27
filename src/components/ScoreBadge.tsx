@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '../theme/theme';
@@ -6,7 +7,7 @@ type ScoreBadgeProps = {
   score: number;
 };
 
-/** Outlined score pill that sits on the teal header. */
+/** Glassy score pill for the top bar. */
 export function ScoreBadge({ score }: ScoreBadgeProps) {
   return (
     <View
@@ -15,8 +16,9 @@ export function ScoreBadge({ score }: ScoreBadgeProps) {
       accessibilityRole="text"
       accessibilityLabel={`النقاط ${score}`}
     >
-      <Text style={styles.label}>النقاط</Text>
+      <Ionicons name="star" size={16} color={colors.primaryBright} />
       <Text style={styles.value}>{score}</Text>
+      <Text style={styles.label}>نقاط</Text>
     </View>
   );
 }
@@ -25,25 +27,23 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.75)',
-    borderRadius: radius.md,
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.md,
-  },
-  label: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: colors.white,
+    gap: spacing.xs + 2,
+    backgroundColor: colors.glass,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   value: {
     fontFamily: fonts.extraBold,
-    fontSize: 22,
-    lineHeight: 30,
-    color: colors.white,
-    minWidth: 16,
+    fontSize: 20,
+    lineHeight: 28,
+    color: colors.text,
+    minWidth: 14,
     textAlign: 'center',
+  },
+  label: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.textMuted,
   },
 });

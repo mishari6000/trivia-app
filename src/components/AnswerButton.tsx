@@ -2,7 +2,15 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { AnswerStatus } from '../game/answerStatus';
-import { colors, fonts, MIN_BUTTON_HEIGHT, radius, spacing, textDirection } from '../theme/theme';
+import {
+  colors,
+  fonts,
+  gradients,
+  MIN_BUTTON_HEIGHT,
+  radius,
+  spacing,
+  textDirection,
+} from '../theme/theme';
 import type { QuestionLanguage } from '../types/question';
 
 type AnswerButtonProps = {
@@ -16,7 +24,7 @@ type AnswerButtonProps = {
 const statusIcon: Partial<
   Record<AnswerStatus, { name: keyof typeof Ionicons.glyphMap; color: string }>
 > = {
-  correct: { name: 'checkmark-circle', color: colors.white },
+  correct: { name: 'checkmark-circle', color: colors.textOnLight },
   incorrect: { name: 'close-circle', color: colors.white },
   revealed: { name: 'checkmark-circle', color: colors.success },
 };
@@ -66,6 +74,7 @@ export function AnswerButton({ label, language, status, disabled, onPress }: Ans
           styles.label,
           textDirection(language),
           isSolid && styles.labelOnColor,
+          status === 'correct' && styles.labelOnBright,
           status === 'revealed' && styles.labelRevealed,
         ]}
       >
@@ -92,16 +101,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   pressed: {
-    borderColor: colors.primary,
-    backgroundColor: colors.frameInner,
+    borderColor: colors.primaryBright,
+    backgroundColor: colors.surfaceRaised,
   },
   correct: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
+    backgroundColor: colors.primaryBright,
+    backgroundImage: gradients.correct,
+    borderColor: colors.primaryBright,
   },
   incorrect: {
-    backgroundColor: colors.error,
-    borderColor: colors.error,
+    backgroundColor: colors.errorStrong,
+    borderColor: colors.errorStrong,
   },
   revealed: {
     backgroundColor: colors.successSoft,
@@ -119,18 +129,21 @@ const styles = StyleSheet.create({
   },
   removedMark: {
     fontSize: 18,
-    color: colors.inkMuted,
+    color: colors.textMuted,
   },
   label: {
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 18,
     lineHeight: 28,
-    color: colors.ink,
+    color: colors.text,
   },
   labelOnColor: {
     color: colors.white,
     fontFamily: fonts.bold,
+  },
+  labelOnBright: {
+    color: colors.textOnLight,
   },
   labelRevealed: {
     color: colors.success,

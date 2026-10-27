@@ -1,7 +1,7 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '../theme/theme';
+import { ProgressRing } from './ProgressRing';
 
 type QuestionTimerProps = {
   remainingMs: number;
@@ -18,29 +18,23 @@ function secondsInArabic(n: number): string {
   return `${n} ثانية`;
 }
 
-/** Seconds left plus a shrinking bar. The last five seconds turn red with text, never flash. */
+/** Countdown ring. The last five seconds turn red with «أسرع!», never flash. */
 export function QuestionTimer({ remainingMs, totalMs }: QuestionTimerProps) {
   const seconds = Math.ceil(remainingMs / 1000);
   const urgent = seconds <= URGENT_SECONDS;
-  const fraction = Math.max(0, Math.min(1, remainingMs / totalMs));
   const label = seconds === 0 ? 'انتهى الوقت' : `باقي ${secondsInArabic(seconds)}`;
 
   return (
-    <View
-      style={styles.container}
-      accessible
-      accessibilityRole="timer"
-      accessibilityLabel={label}
-    >
-      <View style={[styles.chip, urgent && styles.chipUrgent]}>
-        <Ionicons name="time" size={18} color={colors.white} />
-        <Text style={styles.seconds}>{seconds}</Text>
-      </View>
-      <View style={styles.track}>
-        <View
-          style={[styles.fill, urgent && styles.fillUrgent, { width: `${fraction * 100}%` }]}
-        />
-      </View>
+    <View style={styles.container} accessible accessibilityRole="timer" accessibilityLabel={label}>
+      <ProgressRing
+        size={108}
+        strokeWidth={9}
+        progress={remainingMs / totalMs}
+        color={urgent ? colors.error : colors.primaryBright}
+      >
+        <Text style={[styles.seconds, urgent && styles.secondsUrgent]}>{seconds}</Text>
+        <Text style={styles.unit}>ثانية</Text>
+      </ProgressRing>
       {urgent ? <Text style={styles.hurry}>{seconds === 0 ? 'انتهى!' : 'أسرع!'}</Text> : null}
     </View>
   );
@@ -48,56 +42,32 @@ export function QuestionTimer({ remainingMs, totalMs }: QuestionTimerProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  chip: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    minWidth: 58,
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    backgroundColor: colors.logoShadow,
-  },
-  chipUrgent: {
-    backgroundColor: colors.error,
   },
   seconds: {
     fontFamily: fonts.extraBold,
-    fontSize: 18,
-    lineHeight: 26,
-    color: colors.white,
-    minWidth: 20,
-    textAlign: 'center',
+    fontSize: 34,
+    lineHeight: 40,
+    color: colors.text,
   },
-  track: {
-    flex: 1,
-    height: 10,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    overflow: 'hidden',
+  secondsUrgent: {
+    color: colors.error,
   },
-  fill: {
-    height: '100%',
-    borderRadius: radius.pill,
-    backgroundColor: colors.white,
-  },
-  fillUrgent: {
-    backgroundColor: colors.error,
+  unit: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    lineHeight: 16,
+    color: colors.textMuted,
   },
   hurry: {
     fontFamily: fonts.extraBold,
     fontSize: 15,
     lineHeight: 22,
     color: colors.white,
-    backgroundColor: colors.error,
+    backgroundColor: colors.errorStrong,
     borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
     overflow: 'hidden',
   },
 });

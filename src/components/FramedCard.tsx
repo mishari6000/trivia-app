@@ -1,32 +1,24 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, shadow, spacing } from '../theme/theme';
+import { colors, radius, spacing } from '../theme/theme';
 
 type FramedCardProps = {
   children: ReactNode;
-  /** Style for the inner panel (padding, alignment, gaps). */
   style?: StyleProp<ViewStyle>;
 };
 
-/** Soft cyan double-frame card used for the question, results and welcome info. */
+/** Dark rounded surface with a hairline border, used for the question and results. */
 export function FramedCard({ children, style }: FramedCardProps) {
-  return (
-    <View style={[styles.frame, shadow]}>
-      <View style={[styles.inner, style]}>{children}</View>
-    </View>
-  );
+  return <View style={[styles.card, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
-  frame: {
-    backgroundColor: colors.frame,
+  card: {
+    backgroundColor: colors.surface,
     borderRadius: radius.xl,
-    padding: spacing.sm + 2,
-  },
-  inner: {
-    backgroundColor: colors.frameInner,
-    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.xl,
   },
 });

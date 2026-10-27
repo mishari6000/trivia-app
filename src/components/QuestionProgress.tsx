@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   active: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.textOnLight,
   },
 });

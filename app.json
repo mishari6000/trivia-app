@@ -26,7 +26,8 @@
       "backgroundColor": "#FFF8EE"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-video"
     ],
     "backgroundColor": "#FFF8EE"
   }

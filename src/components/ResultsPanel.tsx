@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, spacing } from '../theme/theme';
 import { FramedCard } from './FramedCard';
 import { PrimaryButton } from './PrimaryButton';
+import { ProgressRing } from './ProgressRing';
 import { SecondaryButton } from './SecondaryButton';
 
 type ResultsPanelProps = {
@@ -17,9 +18,12 @@ export function ResultsPanel({ score, total, onPlayAgain, onChangeCategory }: Re
   return (
     <View style={styles.container}>
       <FramedCard style={styles.card}>
-        <View style={styles.trophy}>
-          <Ionicons name="trophy" size={48} color={colors.ink} />
-        </View>
+        <ProgressRing size={168} strokeWidth={12} progress={score / total} color={colors.primaryBright}>
+          <Ionicons name="trophy" size={34} color={colors.primaryBright} />
+          <Text style={styles.ringScore}>
+            {score}/{total}
+          </Text>
+        </ProgressRing>
         <Text style={styles.title} accessibilityRole="header">
           نتيجتك: {score} من {total}
         </Text>
@@ -44,19 +48,18 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingVertical: spacing.xxl,
   },
-  trophy: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.sun,
+  ringScore: {
+    fontFamily: fonts.extraBold,
+    fontSize: 30,
+    lineHeight: 40,
+    color: colors.text,
+    writingDirection: 'ltr',
   },
   title: {
     fontFamily: fonts.extraBold,
-    fontSize: 32,
-    lineHeight: 46,
-    color: colors.ink,
+    fontSize: 28,
+    lineHeight: 42,
+    color: colors.text,
     textAlign: 'center',
   },
 });

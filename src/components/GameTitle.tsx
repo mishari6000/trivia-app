@@ -1,31 +1,62 @@
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { logoText } from '../theme/theme';
+import { colors, fonts, radius } from '../theme/theme';
 
 type GameTitleProps = {
   size: 'large' | 'compact';
 };
 
-/** The game's typographic logo: chunky blue letters with a hard navy offset shadow. */
+/** The game's wordmark: a small green «؟» mark next to the name. */
 export function GameTitle({ size }: GameTitleProps) {
+  const large = size === 'large';
   return (
-    <Text
-      style={[logoText, size === 'large' ? styles.large : styles.compact]}
-      accessibilityRole="header"
-    >
-      تحدّي اليمعة
-    </Text>
+    <View style={styles.row} accessible accessibilityRole="header" accessibilityLabel="تحدّي اليمعة">
+      <View style={[styles.mark, large && styles.markLarge]}>
+        <Text style={[styles.markText, large && styles.markTextLarge]}>؟</Text>
+      </View>
+      <Text style={[styles.name, large && styles.nameLarge]}>تحدّي اليمعة</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  large: {
-    fontSize: 48,
-    lineHeight: 72,
-    textAlign: 'center',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  compact: {
-    fontSize: 28,
-    lineHeight: 42,
+  mark: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryBright,
+    transform: [{ rotate: '-8deg' }],
+  },
+  markLarge: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+  },
+  markText: {
+    fontFamily: fonts.extraBold,
+    fontSize: 20,
+    lineHeight: 28,
+    color: colors.textOnLight,
+  },
+  markTextLarge: {
+    fontSize: 26,
+    lineHeight: 36,
+  },
+  name: {
+    fontFamily: fonts.extraBold,
+    fontSize: 22,
+    lineHeight: 32,
+    color: colors.text,
+  },
+  nameLarge: {
+    fontSize: 24,
+    lineHeight: 34,
   },
 });

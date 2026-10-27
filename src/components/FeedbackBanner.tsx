@@ -87,6 +87,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 17,
     lineHeight: 26,
-    color: colors.ink,
+    color: colors.text,
   },
 });

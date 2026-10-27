@@ -33,7 +33,7 @@ npx expo start --tunnel
 ## هيكل المشروع
 
 ```
-App.tsx                         تحميل الخط (Tajawal مضمّن) + التبديل بين شاشة البداية واللعبة
+App.tsx                         تحميل الخط (Tajawal مضمّن) + المقدمة ← البداية ← اللعبة
 src/
   types/question.ts             نوع Question المشترك + PlayableQuestion
   data/questions.ts             بنك الأسئلة المحلي: 10 أسئلة لكل فئة، 60 سؤال (خارج JSX)
@@ -44,6 +44,7 @@ src/
   game/answerStatus.ts          حالة كل زر + كشف الإجابة الصحيحة بعد الغلط
   game/shuffle.ts               اختيار 5 أسئلة عشوائية + خلط الإجابات، مرة وحدة لكل لعبة
   game/useTriviaGame.ts         hook: عدّاد العرض، انتهاء الوقت، الانتقال التلقائي، الرجوع من الخلفية
+  screens/IntroScreen.tsx       فيديو المقدمة أول ما يفتح التطبيق (expo-video) مع «تخطّي»
   screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئة + ابدأ التحدّي)
   screens/GameScreen.tsx        شاشة اللعب (لعب + نتيجة)
   components/                   المكوّنات القابلة لإعادة الاستخدام
@@ -63,11 +64,13 @@ src/
 | `CategoryBadge` | `src/components/CategoryBadge.tsx` | `WelcomeScreen` و `GameScreen` — شارة الفئة |
 | `ScreenLayout` | `src/components/ScreenLayout.tsx` | `WelcomeScreen` و `GameScreen` — الهيدر المنحني، المساحات الآمنة، التمرير، عمود RTL |
 | `FramedCard` | `src/components/FramedCard.tsx` | `QuestionCard` و `ResultsPanel` و `WelcomeScreen` — البطاقة بالإطار السماوي |
-| `GameTitle` | `src/components/GameTitle.tsx` | `WelcomeScreen` (كبير) و `GameScreen` (مصغّر) — شعار الاسم |
+| `GameTitle` | `src/components/GameTitle.tsx` | `WelcomeScreen` — شعار الاسم مع علامة «؟» خضرا |
 | `QuestionProgress` | `src/components/QuestionProgress.tsx` | `GameScreen` — «السؤال 2 من 5» وشريط الخطوات |
-| `QuestionTimer` | `src/components/QuestionTimer.tsx` | `GameScreen` — الثواني الباقية وشريط يقصر، أحمر مع «أسرع!» آخر 5 ثوانٍ |
+| `QuestionTimer` | `src/components/QuestionTimer.tsx` | `GameScreen` — حلقة عدّ تنازلي، حمرا مع «أسرع!» آخر 5 ثوانٍ |
 | `FiftyFiftyButton` | `src/components/FiftyFiftyButton.tsx` | `GameScreen` — 50/50 مرة وحدة لكل لعبة |
-| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة قابلة للاختيار (6 بطاقات) |
+| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة (صورة + عدد الأسئلة + ابدأ)؛ الضغط يبدأ اللعبة |
+| `ProgressRing` | `src/components/ProgressRing.tsx` | `QuestionTimer` و `InfoBanner` و `ResultsPanel` — حلقة تقدّم (react-native-svg) |
+| `InfoBanner` | `src/components/InfoBanner.tsx` | `WelcomeScreen` — شريط أخضر بقوانين اللعبة |
 | `SecondaryButton` | `src/components/SecondaryButton.tsx` | `ResultsPanel` — «غيّر الفئة» |
 
 ## أين الأسئلة؟
@@ -83,6 +86,12 @@ src/
 المستودع مربوط بـ Vercel، وكل push على `main` ينشر نسخة جديدة تلقائيًا.
 
 **الرابط:** https://trivia-app-phi-two.vercel.app
+
+## فيديو المقدمة
+
+`intro/` فيه البرومت (`PROMPT.md`)، الـ storyboard، والمشهد (`intro.html`) — كل إطار يُحسب من `window.seek(t)`.
+التصيير: `node intro/render.mjs <tools-dir> beats|audio|full` (Playwright + ffmpeg-static في مجلد أدوات خارج المشروع).
+النسخة الكاملة 1080×1920 60fps تطلع في `intro/out/` (مو في Git)، ونسخة التطبيق 720×1280 30fps في `assets/intro/intro.mp4`.
 
 ## ملاحظات تصميمية
 

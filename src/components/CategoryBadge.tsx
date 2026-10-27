@@ -18,7 +18,7 @@ export function CategoryBadge({ label, style }: CategoryBadgeProps) {
 const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.sun,
+    backgroundColor: colors.glass,
     borderRadius: radius.pill,
     paddingVertical: 2,
     paddingHorizontal: spacing.md,
@@ -26,6 +26,6 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.ink,
+    color: colors.text,
   },
 });

@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Pressable, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 
 import { AnswerButton } from '../components/AnswerButton';
-import { CategoryBadge } from '../components/CategoryBadge';
 import { FeedbackBanner } from '../components/FeedbackBanner';
 import { FiftyFiftyButton } from '../components/FiftyFiftyButton';
-import { GameTitle } from '../components/GameTitle';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { QuestionCard } from '../components/QuestionCard';
 import { QuestionProgress } from '../components/QuestionProgress';
@@ -50,22 +49,26 @@ export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
 
   return (
     <ScreenLayout
+      variant="hero"
       scrollRef={scrollRef}
       header={
         <>
-          <View style={styles.header}>
-            <View style={styles.titleBlock}>
-              <GameTitle size="compact" />
-              <CategoryBadge label={getCategory(category).label} />
-            </View>
+          <View style={styles.topBar}>
+            <Pressable
+              onPress={onChangeCategory}
+              accessibilityRole="button"
+              accessibilityLabel="رجوع للفئات"
+              style={({ pressed }) => [styles.back, pressed && styles.backPressed]}
+            >
+              <Ionicons name="arrow-forward" size={24} color={colors.white} />
+            </Pressable>
             <ScoreBadge score={state.score} />
           </View>
-          {isResults ? null : (
-            <>
-              <QuestionProgress {...progress} />
-              <QuestionTimer remainingMs={remainingMs} totalMs={totalMs} />
-            </>
-          )}
+          <Text style={styles.category} accessibilityRole="header">
+            {getCategory(category).label}
+          </Text>
+          <Text style={styles.subtitle}>تحدّي اليمعة · خمس أسئلة</Text>
+          {isResults ? null : <QuestionProgress {...progress} />}
         </>
       }
     >
@@ -78,6 +81,7 @@ export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
         />
       ) : (
         <View style={styles.playArea}>
+          <QuestionTimer remainingMs={remainingMs} totalMs={totalMs} />
           <QuestionCard
             question={currentQuestion.question}
             language={currentQuestion.language}
@@ -124,15 +128,34 @@ export function GameScreen({ category, onChangeCategory }: GameScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
-  titleBlock: {
-    flexShrink: 1,
-    gap: spacing.xs,
+  back: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.glass,
+  },
+  backPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.24)',
+  },
+  category: {
+    fontFamily: fonts.extraBold,
+    fontSize: 32,
+    lineHeight: 46,
+    color: colors.white,
+  },
+  subtitle: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    lineHeight: 24,
+    color: 'rgba(255, 255, 255, 0.85)',
   },
   playArea: {
     flex: 1,
@@ -150,7 +173,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 17,
     lineHeight: 26,
-    color: colors.inkMuted,
+    color: colors.textMuted,
     textAlign: 'center',
   },
 });

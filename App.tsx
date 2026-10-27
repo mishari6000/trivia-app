@@ -9,15 +9,16 @@ import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GameScreen } from './src/screens/GameScreen';
+import { IntroScreen } from './src/screens/IntroScreen';
 import { WelcomeScreen } from './src/screens/WelcomeScreen';
 import { DEFAULT_CATEGORY } from './src/data/categories';
 import { colors } from './src/theme/theme';
 import type { CategoryName } from './src/types/question';
 
-type Screen = 'welcome' | 'game';
+type Screen = 'intro' | 'welcome' | 'game';
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('welcome');
+  const [screen, setScreen] = useState<Screen>('intro');
   const [category, setCategory] = useState<CategoryName>(DEFAULT_CATEGORY);
   // Fonts ship inside the app bundle; nothing is downloaded at runtime.
   const [fontsLoaded, fontError] = useFonts({
@@ -35,15 +36,18 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       {/* GameScreen mounts with a fresh game, so Start always begins at score zero. */}
+      {screen === 'intro' ? <IntroScreen onDone={() => setScreen('welcome')} /> : null}
       {screen === 'welcome' ? (
         <WelcomeScreen
-          selectedCategory={category}
-          onSelectCategory={setCategory}
-          onStart={() => setScreen('game')}
+          onStart={(chosen) => {
+            setCategory(chosen);
+            setScreen('game');
+          }}
         />
-      ) : (
+      ) : null}
+      {screen === 'game' ? (
         <GameScreen category={category} onChangeCategory={() => setScreen('welcome')} />
-      )}
+      ) : null}
     </SafeAreaProvider>
   );
 }

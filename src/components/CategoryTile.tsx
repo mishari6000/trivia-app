@@ -5,42 +5,46 @@ import { colors, fonts, gradients, radius, shadow, spacing } from '../theme/them
 
 type CategoryTileProps = {
   label: string;
+  questionCount: number;
   image?: ImageSourcePropType;
-  /** Shown on the warm art area when the category has no illustration yet. */
+  /** Shown when the category has no illustration. */
   icon: keyof typeof Ionicons.glyphMap;
-  selected: boolean;
-  onPress: () => void;
+  onStart: () => void;
 };
 
-/** Illustrated category card: square artwork with a bold label band. Tap to select. */
-export function CategoryTile({ label, image, icon, selected, onPress }: CategoryTileProps) {
+/** Event-style category card: artwork, info chips, name and a Start pill. Tapping starts it. */
+export function CategoryTile({ label, questionCount, image, icon, onStart }: CategoryTileProps) {
   return (
     <Pressable
-      onPress={onPress}
-      role="radio"
-      aria-label={`الفئة: ${label}`}
-      aria-checked={selected}
-      style={({ pressed }) => [
-        styles.tile,
-        shadow,
-        selected && styles.selected,
-        pressed && styles.pressed,
-      ]}
+      onPress={onStart}
+      accessibilityRole="button"
+      accessibilityLabel={`ابدأ فئة ${label}، ${questionCount} أسئلة`}
+      style={({ pressed }) => [styles.tile, shadow, pressed && styles.pressed]}
     >
       <View style={styles.art}>
         {image ? (
           <Image source={image} style={styles.image} resizeMode="cover" />
         ) : (
-          <Ionicons name={icon} size={64} color={colors.logoShadow} />
+          <Ionicons name={icon} size={56} color={colors.primaryBright} />
         )}
-        {selected ? (
-          <View style={styles.check}>
-            <Ionicons name="checkmark-circle" size={30} color={colors.success} />
+        <View style={[StyleSheet.absoluteFill, styles.shade]} />
+        <View style={styles.chips}>
+          <View style={styles.chip}>
+            <Ionicons name="help-circle" size={14} color={colors.white} />
+            <Text style={styles.chipText}>{questionCount}</Text>
           </View>
-        ) : null}
+          <View style={styles.chip}>
+            <Ionicons name="time" size={14} color={colors.white} />
+            <Text style={styles.chipText}>15ث</Text>
+          </View>
+        </View>
       </View>
-      <View style={styles.band}>
+
+      <View style={styles.footer}>
         <Text style={styles.label}>{label}</Text>
+        <View style={styles.start}>
+          <Text style={styles.startText}>ابدأ</Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -49,51 +53,72 @@ export function CategoryTile({ label, image, icon, selected, onPress }: Category
 const styles = StyleSheet.create({
   tile: {
     flex: 1,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl - 4,
     overflow: 'hidden',
-    backgroundColor: colors.cardBand,
-    borderWidth: 3,
-    borderColor: 'transparent',
-  },
-  selected: {
-    borderColor: colors.logoShadow,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   pressed: {
     transform: [{ scale: 0.97 }],
   },
   art: {
-    aspectRatio: 1,
+    aspectRatio: 1.05,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cardTop,
-    backgroundImage: gradients.card,
+    backgroundColor: colors.surfaceRaised,
   },
   image: {
     width: '100%',
     height: '100%',
   },
-  check: {
+  shade: {
+    backgroundImage: gradients.cardShade,
+  },
+  chips: {
     position: 'absolute',
     top: spacing.sm,
     start: spacing.sm,
-    borderRadius: 16,
-    backgroundColor: colors.white,
+    flexDirection: 'row',
+    gap: spacing.xs + 2,
   },
-  band: {
-    minHeight: 48,
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(10, 22, 32, 0.55)',
+    borderRadius: radius.pill,
+    paddingVertical: 3,
     paddingHorizontal: spacing.sm,
-    backgroundColor: colors.cardBand,
+  },
+  chipText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.white,
+  },
+  footer: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    paddingTop: spacing.xs,
   },
   label: {
     fontFamily: fonts.extraBold,
     fontSize: 19,
     lineHeight: 28,
     color: colors.white,
-    textAlign: 'center',
-    textShadowColor: 'rgba(22, 33, 62, 0.25)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 0,
+  },
+  start: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: colors.background,
+  },
+  startText: {
+    fontFamily: fonts.extraBold,
+    fontSize: 17,
+    lineHeight: 26,
+    color: colors.text,
   },
 });
