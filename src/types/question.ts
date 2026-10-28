@@ -27,10 +27,10 @@ export type CategoryName =
   | 'Entertainment: Japanese Anime & Manga'
   | 'Entertainment: Cartoon & Animations';
 
-/** Where a game's questions come from. */
-export type QuestionSource = 'local' | 'online';
+/** The level a player picks for each category. */
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
-/** Raw question shape. Future internet/AI sources must return this same shape. */
+/** Raw question shape, shared by the hand-written bank and the generated one. */
 export type Question = {
   id: string;
   category: CategoryName;
@@ -38,6 +38,14 @@ export type Question = {
   question: string;
   correctAnswer: string;
   incorrectAnswers: [string, string, string];
+};
+
+/** One generated question in src/data/bank.json (always Arabic). */
+export type BankQuestion = Omit<Question, 'language'> & { difficulty: Difficulty };
+
+export type Bank = {
+  meta: { spentUsd: number; writer: string[]; checker: string[]; updatedAt: string | null };
+  questions: BankQuestion[];
 };
 
 export type AnswerOption = {

@@ -8,19 +8,22 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { GameSessionScreen } from './src/screens/GameSessionScreen';
-import { IntroScreen } from './src/screens/IntroScreen';
-import { WelcomeScreen } from './src/screens/WelcomeScreen';
 import { DEFAULT_CATEGORY } from './src/data/categories';
+import { newGame } from './src/game/pickSession';
+import { GameScreen } from './src/screens/GameScreen';
+import { IntroScreen } from './src/screens/IntroScreen';
+import { LevelScreen } from './src/screens/LevelScreen';
+import { WelcomeScreen } from './src/screens/WelcomeScreen';
 import { colors } from './src/theme/theme';
-import type { CategoryName, QuestionSource } from './src/types/question';
+import type { CategoryName, Difficulty, PlayableQuestion } from './src/types/question';
 
-type Screen = 'intro' | 'welcome' | 'game';
+type Screen = 'intro' | 'welcome' | 'level' | 'game';
+type Game = { id: number; difficulty: Difficulty; questions: PlayableQuestion[] };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('intro');
   const [category, setCategory] = useState<CategoryName>(DEFAULT_CATEGORY);
-  const [source, setSource] = useState<QuestionSource>('local');
+  const [game, setGame] = useState<Game | null>(null);
   // Fonts ship inside the app bundle; nothing is downloaded at runtime.
   const [fontsLoaded, fontError] = useFonts({
     Tajawal_400Regular,
@@ -29,6 +32,12 @@ export default function App() {
     Tajawal_800ExtraBold,
   });
 
+  // Each game gets fresh questions and a new id, so GameScreen mounts fresh and starts at zero.
+  const startGame = (difficulty: Difficulty) => {
+    setGame((prev) => ({ id: (prev?.id ?? 0) + 1, difficulty, questions: newGame(category, difficulty) }));
+    setScreen('game');
+  };
+
   if (!fontsLoaded && !fontError) {
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
   }
@@ -36,25 +45,26 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      {/* Each game mounts fresh (GameSessionScreen loads it), so Start always begins at zero. */}
       {screen === 'intro' ? <IntroScreen onDone={() => setScreen('welcome')} /> : null}
       {screen === 'welcome' ? (
         <WelcomeScreen
-          source={source}
-          onSourceChange={setSource}
           onStart={(chosen) => {
             setCategory(chosen);
-            setScreen('game');
+            setScreen('level');
           }}
         />
       ) : null}
-      {screen === 'game' ? (
-        <GameSessionScreen
-          key={`${category}|${source}`}
+      {screen === 'level' ? (
+        <LevelScreen category={category} onPick={startGame} onBack={() => setScreen('welcome')} />
+      ) : null}
+      {screen === 'game' && game ? (
+        <GameScreen
+          key={game.id}
           category={category}
-          source={source}
-          onExit={() => setScreen('welcome')}
-          onChangeCategory={setCategory}
+          difficulty={game.difficulty}
+          questions={game.questions}
+          onPlayAgain={() => startGame(game.difficulty)}
+          onChangeCategory={() => setScreen('welcome')}
         />
       ) : null}
     </SafeAreaProvider>

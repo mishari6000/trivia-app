@@ -15,7 +15,7 @@ import {
 const TICK_MS = 200;
 
 /**
- * Runs one game over an already prepared session (see loadSession). The clock starts when
+ * Runs one game over an already prepared session (see pickSession). The clock starts when
  * the game mounts, so loading time never counts against the first question.
  */
 export function useTriviaGame(questions: PlayableQuestion[]) {

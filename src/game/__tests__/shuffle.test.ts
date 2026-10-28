@@ -1,4 +1,4 @@
-import { categoriesFor } from '../../data/categories';
+import { FEATURED } from '../../data/categories';
 import { getLocalQuestions } from '../../data/getLocalQuestions';
 import { questions as questionBank } from '../../data/questions';
 import { createInitialState, gameReducer } from '../gameReducer';
@@ -65,7 +65,7 @@ describe('prepareSession', () => {
   });
 
   it('picks five unique questions from the chosen category only', () => {
-    categoriesFor('local').forEach(({ name }) => {
+    FEATURED.forEach((name) => {
       const categoryIds = new Set(questionBank.filter((q) => q.category === name).map((q) => q.id));
       for (let seed = 1; seed <= 20; seed++) {
         const session = prepareSession(getLocalQuestions(name), seeded(seed));
@@ -80,7 +80,7 @@ describe('prepareSession', () => {
 
   it('uses every question of a category across sessions and varies the selection', () => {
     const random = seeded(11);
-    categoriesFor('local').forEach(({ name }) => {
+    FEATURED.forEach((name) => {
       const used = new Set<string>();
       const selections = new Set<string>();
       for (let i = 0; i < 200; i++) {

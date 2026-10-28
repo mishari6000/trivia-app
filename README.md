@@ -33,25 +33,30 @@ npx expo start --tunnel
 ## هيكل المشروع
 
 ```
-App.tsx                         تحميل الخط (Tajawal مضمّن) + المقدمة ← البداية ← اللعبة
+App.tsx                         تحميل الخط (Tajawal مضمّن) + المقدمة ← الفئات ← المستوى ← اللعبة
 src/
-  types/question.ts             نوع Question المشترك + PlayableQuestion
-  data/questions.ts             بنك الأسئلة المحلي: 10 أسئلة لكل فئة، 60 سؤال (خارج JSX)
-  data/categories.ts            24 فئة من Open Trivia DB: الاسم العربي، رقمها، الصورة/الأيقونة
-  data/openTrivia.ts            جلب الأسئلة من الإنترنت: فك الترميز، التحقق، الأخطاء، حد الـ 5 ثواني
-  game/loadSession.ts           يجهّز جلسة 5 أسئلة من المحلي أو من الإنترنت
+  types/question.ts             أنواع Question وBankQuestion وDifficulty وPlayableQuestion
+  data/questions.ts             60 سؤال مكتوبة باليد في 6 فئات (تنحسب «سهل»)
+  data/bank.json                بنك الأسئلة المولّدة: عربي، مدقّق، مع المستوى (يتولّد بالسكربت)
+  data/bank.ts                  يجمع البنكين: العدد لكل فئة ومستوى، والتحقق عند أول استخدام
+  data/categories.ts            24 فئة: الاسم العربي، الصورة/الأيقونة، والست المميزة أولًا
   data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
+  game/pickSession.ts           يختار 5 أسئلة ما انلعبت، لين تخلص أسئلة المستوى
   game/gameReducer.ts           حالات اللعبة + المؤقّت (deadline) + 50/50؛ كل سؤال ينحسم مرة وحدة
   game/fiftyFifty.ts            اختيار إجابتين خطأ للحذف
   game/answerStatus.ts          حالة كل زر + كشف الإجابة الصحيحة بعد الغلط
-  game/shuffle.ts               اختيار 5 أسئلة عشوائية + خلط الإجابات، مرة وحدة لكل لعبة
+  game/shuffle.ts               خلط Fisher–Yates للأسئلة والإجابات
   game/useTriviaGame.ts         hook: عدّاد العرض، انتهاء الوقت، الانتقال التلقائي، الرجوع من الخلفية
   screens/IntroScreen.tsx       فيديو المقدمة أول ما يفتح التطبيق (expo-video) مع «تخطّي»
-  screens/GameSessionScreen.tsx  يحمّل الأسئلة (تحميل / خطأ / إعادة / بديل عربي) ثم يشغّل اللعبة
-  screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئة + ابدأ التحدّي)
+  screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئات)
+  screens/LevelScreen.tsx       اختيار المستوى: سهل / متوسط / صعب، مع عدد الأسئلة
   screens/GameScreen.tsx        شاشة اللعب (لعب + نتيجة)
   components/                   المكوّنات القابلة لإعادة الاستخدام
   theme/theme.ts                الألوان والخطوط والمسافات واتجاه النص
+scripts/
+  generate-questions.mts        يولّد الأسئلة بـ OpenRouter ويدقّقها ويحفظها في bank.json (حد 5$)
+  questionGen.ts                البرومبت، الـ JSON Schema، التحقق، التكلفة (مع اختبارات)
+  generate-category-art.mjs     صور الفئات بـ kie.ai
 ```
 
 ### المكوّنات
@@ -71,28 +76,32 @@ src/
 | `QuestionProgress` | `src/components/QuestionProgress.tsx` | `GameScreen` — «السؤال 2 من 5» وشريط الخطوات |
 | `QuestionTimer` | `src/components/QuestionTimer.tsx` | `GameScreen` — حلقة عدّ تنازلي، حمرا مع «أسرع!» آخر 5 ثوانٍ |
 | `FiftyFiftyButton` | `src/components/FiftyFiftyButton.tsx` | `GameScreen` — 50/50 مرة وحدة لكل لعبة |
-| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة (صورة + عدد الأسئلة + ابدأ)؛ الضغط يبدأ اللعبة |
+| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة (صورة + عدد الأسئلة + ابدأ)؛ الضغط يفتح اختيار المستوى |
 | `ProgressRing` | `src/components/ProgressRing.tsx` | `QuestionTimer` و `InfoBanner` و `ResultsPanel` — حلقة تقدّم (react-native-svg) |
 | `InfoBanner` | `src/components/InfoBanner.tsx` | `WelcomeScreen` — شريط أخضر بقوانين اللعبة |
 | `SecondaryButton` | `src/components/SecondaryButton.tsx` | `ResultsPanel` — «غيّر الفئة» |
 
 ## مصدر الأسئلة
 
-- **عربي:** 60 سؤال داخل التطبيق في 6 فئات، وتشتغل بدون إنترنت.
-- **English · إنترنت:** [Open Trivia DB](https://opentdb.com) في 24 فئة (multiple choice). كل لعبة تجيب 10 وتختار 5.
-  التطبيق ينتظر 6 ثواني بين الطلبات (حد الخادم 5 ثواني، ويرجع HTTP 429)، ويعيد المحاولة تلقائيًا مع انتظار أطول بعد كل رفض.
-  ثلاث حالات بدل شاشة فاضية (`GameSessionScreen` + `StatusCard`):
-  - **تحميل:** «نجيب الأسئلة…»، ولو ننتظر الخادم يقول ليش وكم ثانية باقية.
-  - **خطأ:** رسالة ودّية + «حاول مرة ثانية». لو الخادم مشغول: يعيد المحاولة بروحه بعد 10 ثواني (مع «حاول الحين»).
-  - **فاضي:** «ما لقينا أسئلة» + «جرّب فئة ثانية» (فئة عشوائية ثانية) أو «العب بالأسئلة العربية».
-  الأسئلة الإنجليزية تنعرض من اليسار لليمين داخل الواجهة العربية. المصدر مذكور: CC BY-SA 4.0.
+كل الأسئلة عربية وداخل التطبيق، وما يتصل بأي خادم وقت اللعب.
+
+- **مكتوبة باليد:** 60 سؤال في 6 فئات (`src/data/questions.ts`)، وتنحسب مستوى «سهل».
+- **مولّدة بالذكاء الاصطناعي:** 1,027 سؤال في 24 فئة وثلاث مستويات (`src/data/bank.json`).
+  انولّدت مرة وحدة بسكربت على الجهاز (`node scripts/generate-questions.mts`) عن طريق [OpenRouter](https://openrouter.ai):
+  - `anthropic/claude-haiku-5.5` يكتب 20 سؤال لكل دفعة حسب الفئة والمستوى، ويشوف الأسئلة الموجودة عشان ما يكررها.
+  - نموذج ثاني يدقّق كل سؤال (الإجابة صح؟ الخطأ خطأ أكيد؟ واضح؟ المستوى مناسب؟)، واللي ما ينجح ينحذف.
+  - المفتاح ينكتب مخفي وقت التشغيل، وما ينحفظ ولا يدخل التطبيق أو Git.
+  - المصروف ينجمع في `bank.json` ويوقف عند 5$. نموذج واحد لكل خطوة، ولو جاوب نموذج ثاني يوقف.
+  - الأسئلة اللي انكتبت وما اندقّقت تنحفظ في `scripts/pending-questions.json` وتندقّق أول التشغيل الجاي.
+- **المستويات:** بعد ما تختار الفئة تختار سهل / متوسط / صعب. المستوى اللي فيه أقل من 5 أسئلة يطلع «قريبًا».
+- **كل لعبة مختلفة:** `pickSession` ما يكرر سؤال لين تخلص أسئلة المستوى، وأول لعبة بعدها ما تكرر اللعبة اللي قبلها.
 
 ## أين الأسئلة؟
 
-كل الأسئلة في `src/data/questions.ts` (10 لكل فئة)، بعيد عن الشاشات والمكوّنات. كل سؤال فيه:
-`id`، الفئة (`category`)، اللغة (`language`)، نص السؤال (`question`)،
-الإجابة الصحيحة (`correctAnswer`)، وثلاث إجابات خطأ (`incorrectAnswers`).
-مصدر الإنترنت يوم الثلاثاء يرجّع نفس الشكل `Question[]`، و`getLocalQuestions` يتحقق منه.
+`src/data/questions.ts` و`src/data/bank.json`، بعيد عن الشاشات والمكوّنات. كل سؤال فيه:
+`id`، الفئة (`category`)، نص السؤال (`question`)، الإجابة الصحيحة (`correctAnswer`)،
+وثلاث إجابات خطأ (`incorrectAnswers`)، والمولّدة فيها المستوى (`difficulty`).
+`src/data/bank.ts` يجمعها، و`getLocalQuestions`/`toPlayableQuestion` يتحقق من كل سؤال.
 
 ## نسخة الويب (Vercel)
 

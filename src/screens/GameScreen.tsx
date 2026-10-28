@@ -12,22 +12,24 @@ import { QuestionTimer } from '../components/QuestionTimer';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { ScreenLayout } from '../components/ScreenLayout';
+import { DIFFICULTY_INFO } from '../data/bank';
 import { getCategory } from '../data/categories';
 import { getAnswerStatus, getFeedbackOutcome, getRevealedAnswer } from '../game/answerStatus';
 import { getQuestionProgress } from '../game/progress';
 import { useTriviaGame } from '../game/useTriviaGame';
 import { colors, fonts, MIN_BUTTON_HEIGHT, spacing } from '../theme/theme';
-import type { CategoryName, PlayableQuestion } from '../types/question';
+import type { CategoryName, Difficulty, PlayableQuestion } from '../types/question';
 
 type GameScreenProps = {
   category: CategoryName;
+  difficulty: Difficulty;
   /** The prepared session (5 questions); a new game remounts this screen with new ones. */
   questions: PlayableQuestion[];
   onPlayAgain: () => void;
   onChangeCategory: () => void;
 };
 
-export function GameScreen({ category, questions, onPlayAgain, onChangeCategory }: GameScreenProps) {
+export function GameScreen({ category, difficulty, questions, onPlayAgain, onChangeCategory }: GameScreenProps) {
   const {
     state,
     currentQuestion,
@@ -69,7 +71,7 @@ export function GameScreen({ category, questions, onPlayAgain, onChangeCategory 
           <Text style={styles.category} accessibilityRole="header">
             {getCategory(category).label}
           </Text>
-          <Text style={styles.subtitle}>تحدّي اليمعة · خمس أسئلة</Text>
+          <Text style={styles.subtitle}>مستوى {DIFFICULTY_INFO[difficulty].label} · خمس أسئلة</Text>
           {isResults ? null : <QuestionProgress {...progress} />}
         </>
       }

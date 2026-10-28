@@ -4,17 +4,12 @@ import { CategoryTile } from '../components/CategoryTile';
 import { GameTitle } from '../components/GameTitle';
 import { InfoBanner } from '../components/InfoBanner';
 import { ScreenLayout } from '../components/ScreenLayout';
-import { SourceToggle } from '../components/SourceToggle';
-import { categoriesFor } from '../data/categories';
-import { getLocalQuestions } from '../data/getLocalQuestions';
+import { countQuestions, playableCategories } from '../data/bank';
 import { QUESTION_TIME_MS } from '../game/gameReducer';
 import { colors, fonts, spacing } from '../theme/theme';
-import type { CategoryName, QuestionSource } from '../types/question';
-import { ONLINE_CREDIT } from './GameSessionScreen';
+import type { CategoryName } from '../types/question';
 
 type WelcomeScreenProps = {
-  source: QuestionSource;
-  onSourceChange: (source: QuestionSource) => void;
   onStart: (category: CategoryName) => void;
 };
 
@@ -23,8 +18,8 @@ function pairs<T>(items: T[]): T[][] {
   return Array.from({ length: Math.ceil(items.length / 2) }, (_, i) => items.slice(i * 2, i * 2 + 2));
 }
 
-export function WelcomeScreen({ source, onSourceChange, onStart }: WelcomeScreenProps) {
-  const list = categoriesFor(source);
+export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+  const list = playableCategories();
   const rows = pairs(list);
   // Arabic agreement: 3–10 فئات، 11+ فئة.
   const countLabel = list.length <= 10 ? `${list.length} فئات` : `${list.length} فئة`;
@@ -46,9 +41,6 @@ export function WelcomeScreen({ source, onSourceChange, onStart }: WelcomeScreen
         subtitle="وعندك 50/50 مرة وحدة بكل لعبة!"
       />
 
-      <SourceToggle value={source} onChange={onSourceChange} />
-      {source === 'online' ? <Text style={styles.credit}>{ONLINE_CREDIT}</Text> : null}
-
       <Text style={styles.section} accessibilityRole="header">
         اختار فئتك · {countLabel}
       </Text>
@@ -59,11 +51,7 @@ export function WelcomeScreen({ source, onSourceChange, onStart }: WelcomeScreen
               <CategoryTile
                 key={category.name}
                 label={category.label}
-                badge={
-                  source === 'online'
-                    ? { icon: 'globe', text: 'EN' }
-                    : { icon: 'help-circle', text: String(getLocalQuestions(category.name).length) }
-                }
+                badge={{ icon: 'help-circle', text: String(countQuestions(category.name)) }}
                 image={category.image}
                 icon={category.icon}
                 onStart={() => onStart(category.name)}
@@ -103,14 +91,6 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     color: colors.text,
     marginTop: spacing.sm,
-  },
-  credit: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    lineHeight: 20,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: -spacing.sm,
   },
   grid: {
     gap: spacing.md,
