@@ -1,6 +1,14 @@
 import { getLocalQuestions } from '../../data/getLocalQuestions';
 import { prepareSession } from '../shuffle';
-import { createInitialState, gameReducer, type GameAction, type GameState } from '../gameReducer';
+import { getAnswerStatus, getFeedbackOutcome, getRevealedAnswer } from '../answerStatus';
+import {
+  createInitialState,
+  gameReducer,
+  getRemainingMs,
+  QUESTION_TIME_MS,
+  type GameAction,
+  type GameState,
+} from '../gameReducer';
 
 // A moment well inside the first question's 15-second window.
 const T = 1000;
@@ -106,5 +114,36 @@ describe('gameReducer', () => {
     expect(restarted).toEqual(createInitialState(fresh, T, state.sessionId + 1));
     expect(restarted.score).toBe(0);
     expect(restarted.currentIndex).toBe(0);
+  });
+});
+
+describe('host controls (board questions)', () => {
+  const one = getLocalQuestions('History').slice(0, 1);
+  const start = () => createInitialState(one, 0);
+
+  it('pause freezes the clock, blocks answers and timeouts, and resume continues from there', () => {
+    let s = gameReducer(start(), { type: 'pause', now: 4_000 });
+    expect(getRemainingMs(s, 60_000)).toBe(11_000);
+    expect(gameReducer(s, { type: 'answer', optionId: one[0].correctOptionId, now: 5_000 })).toBe(s);
+    expect(gameReducer(s, { type: 'timeout', now: 99_000, sessionId: 0, index: 0 })).toBe(s);
+    s = gameReducer(s, { type: 'resume', now: 50_000 });
+    expect(s.deadline).toBe(61_000);
+    expect(getRemainingMs(s, 51_000)).toBe(10_000);
+  });
+
+  it('restart gives the same question a full clock again', () => {
+    const s = gameReducer(start(), { type: 'restartTimer', now: 12_000 });
+    expect(s.phase).toBe('answering');
+    expect(getRemainingMs(s, 12_000)).toBe(QUESTION_TIME_MS);
+  });
+
+  it('«اظهر الجواب» ends the question with no points and shows the right answer', () => {
+    const s = gameReducer(start(), { type: 'reveal', now: 3_000 });
+    expect(s.phase).toBe('feedback');
+    expect(s.score).toBe(0);
+    expect(getFeedbackOutcome(s)).toBe('revealed');
+    expect(getAnswerStatus(s, one[0].correctOptionId)).toBe('revealed');
+    expect(getRevealedAnswer(s)).toBe(one[0].options.find((o) => o.id === one[0].correctOptionId)?.text);
+    expect(gameReducer(s, { type: 'answer', optionId: one[0].correctOptionId, now: 3_500 })).toBe(s);
   });
 });

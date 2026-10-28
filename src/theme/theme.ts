@@ -24,6 +24,10 @@ export const colors = {
   white: '#FFFFFF',
   whitePressed: '#DDE6EC',
   glass: 'rgba(255, 255, 255, 0.12)',
+  /** Team colours on the board: team one is the brand green, team two amber. */
+  teamOne: '#22DD82',
+  teamTwo: '#F5B93B',
+  teamTwoSoft: 'rgba(245, 185, 59, 0.16)',
 };
 
 /** CSS gradient strings for the `backgroundImage` style (Android, iOS and web). */

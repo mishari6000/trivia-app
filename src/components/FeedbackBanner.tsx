@@ -33,6 +33,12 @@ const content: Record<
     color: colors.error,
     background: colors.errorSoft,
   },
+  revealed: {
+    icon: 'eye',
+    text: 'هذي الإجابة',
+    color: colors.teamTwo,
+    background: colors.teamTwoSoft,
+  },
 };
 
 export function FeedbackBanner({ outcome, correctAnswer }: FeedbackBannerProps) {

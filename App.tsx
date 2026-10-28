@@ -8,22 +8,25 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { DEFAULT_CATEGORY } from './src/data/categories';
-import { newGame } from './src/game/pickSession';
-import { GameScreen } from './src/screens/GameScreen';
+import { boardReducer, createBoard, type BoardAction, type BoardState, type Tile } from './src/game/board';
+import { pickQuestion } from './src/game/pickSession';
+import { BoardScreen } from './src/screens/BoardScreen';
 import { IntroScreen } from './src/screens/IntroScreen';
-import { LevelScreen } from './src/screens/LevelScreen';
-import { WelcomeScreen } from './src/screens/WelcomeScreen';
+import { DEFAULT_TEAM_NAMES, SetupScreen } from './src/screens/SetupScreen';
+import { TileQuestionScreen } from './src/screens/TileQuestionScreen';
 import { colors } from './src/theme/theme';
-import type { CategoryName, Difficulty, PlayableQuestion } from './src/types/question';
+import type { CategoryName, PlayableQuestion } from './src/types/question';
 
-type Screen = 'intro' | 'welcome' | 'level' | 'game';
-type Game = { id: number; difficulty: Difficulty; questions: PlayableQuestion[] };
+type Screen = 'intro' | 'setup' | 'board' | 'question';
+/** The tile being played, with its question (kept in an array so the engine stays stable). */
+type Active = { tile: Tile; questions: PlayableQuestion[] };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('intro');
-  const [category, setCategory] = useState<CategoryName>(DEFAULT_CATEGORY);
-  const [game, setGame] = useState<Game | null>(null);
+  const [picked, setPicked] = useState<CategoryName[]>([]);
+  const [teamNames, setTeamNames] = useState<[string, string]>(DEFAULT_TEAM_NAMES);
+  const [board, setBoard] = useState<BoardState | null>(null);
+  const [active, setActive] = useState<Active | null>(null);
   // Fonts ship inside the app bundle; nothing is downloaded at runtime.
   const [fontsLoaded, fontError] = useFonts({
     Tajawal_400Regular,
@@ -32,10 +35,16 @@ export default function App() {
     Tajawal_800ExtraBold,
   });
 
-  // Each game gets fresh questions and a new id, so GameScreen mounts fresh and starts at zero.
-  const startGame = (difficulty: Difficulty) => {
-    setGame((prev) => ({ id: (prev?.id ?? 0) + 1, difficulty, questions: newGame(category, difficulty) }));
-    setScreen('game');
+  const update = (action: BoardAction) => setBoard((b) => (b ? boardReducer(b, action) : b));
+  const newBoard = (categories: CategoryName[], names: [string, string]) => {
+    setBoard(createBoard(categories, names));
+    setScreen('board');
+  };
+  const pickTile = (tile: Tile) => {
+    const question = pickQuestion(tile.category, tile.difficulty);
+    if (!question) return;
+    setActive({ tile, questions: [question] });
+    setScreen('question');
   };
 
   if (!fontsLoaded && !fontError) {
@@ -45,26 +54,41 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      {screen === 'intro' ? <IntroScreen onDone={() => setScreen('welcome')} /> : null}
-      {screen === 'welcome' ? (
-        <WelcomeScreen
-          onStart={(chosen) => {
-            setCategory(chosen);
-            setScreen('level');
+      {screen === 'intro' ? <IntroScreen onDone={() => setScreen('setup')} /> : null}
+      {screen === 'setup' ? (
+        <SetupScreen
+          initialCategories={picked}
+          initialNames={teamNames}
+          onStart={(categories, names) => {
+            setPicked(categories);
+            setTeamNames(names);
+            newBoard(categories, names);
           }}
         />
       ) : null}
-      {screen === 'level' ? (
-        <LevelScreen category={category} onPick={startGame} onBack={() => setScreen('welcome')} />
+      {screen === 'board' && board ? (
+        <BoardScreen
+          board={board}
+          onPick={pickTile}
+          onAdjust={(team, delta) => update({ type: 'adjust', team, delta })}
+          onSwitchTurn={() => update({ type: 'switchTurn' })}
+          onNewGame={() => newBoard(picked, teamNames)}
+          onChangeCategories={() => setScreen('setup')}
+        />
       ) : null}
-      {screen === 'game' && game ? (
-        <GameScreen
-          key={game.id}
-          category={category}
-          difficulty={game.difficulty}
-          questions={game.questions}
-          onPlayAgain={() => startGame(game.difficulty)}
-          onChangeCategory={() => setScreen('welcome')}
+      {screen === 'question' && board && active ? (
+        <TileQuestionScreen
+          key={active.tile.id}
+          tile={active.tile}
+          questions={active.questions}
+          teams={board.teams}
+          turn={board.turn}
+          onAdjust={(team, delta) => update({ type: 'adjust', team, delta })}
+          onDone={({ correct, usedFiftyFifty }) => {
+            update({ type: 'resolve', tileId: active.tile.id, correct, usedFiftyFifty });
+            setActive(null);
+            setScreen('board');
+          }}
         />
       ) : null}
     </SafeAreaProvider>

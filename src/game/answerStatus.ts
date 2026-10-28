@@ -4,13 +4,13 @@ import type { GameState } from './gameReducer';
  * idle      – can still be picked
  * correct   – the player's correct pick
  * incorrect – the player's wrong pick
- * revealed  – the right answer, shown after a wrong pick or a timeout
+ * revealed  – the right answer, shown after a wrong pick, a timeout or «اظهر الجواب»
  * dimmed    – any other option once the question is locked
  * removed   – taken out by 50/50; not selectable or announced
  */
 export type AnswerStatus = 'idle' | 'correct' | 'incorrect' | 'revealed' | 'dimmed' | 'removed';
 
-export type FeedbackOutcome = 'correct' | 'incorrect' | 'timeout';
+export type FeedbackOutcome = 'correct' | 'incorrect' | 'timeout' | 'revealed';
 
 export function getAnswerStatus(state: GameState, optionId: string): AnswerStatus {
   if (state.removedOptionIds.includes(optionId)) return 'removed';
@@ -26,6 +26,7 @@ export function getAnswerStatus(state: GameState, optionId: string): AnswerStatu
 
 export function getFeedbackOutcome(state: GameState): FeedbackOutcome | null {
   if (state.phase !== 'feedback') return null;
+  if (state.revealedByHost) return 'revealed';
   if (state.timedOut) return 'timeout';
   return state.lastAnswerCorrect ? 'correct' : 'incorrect';
 }

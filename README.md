@@ -33,7 +33,7 @@ npx expo start --tunnel
 ## هيكل المشروع
 
 ```
-App.tsx                         تحميل الخط (Tajawal مضمّن) + المقدمة ← الفئات ← المستوى ← اللعبة
+App.tsx                         تحميل الخط (Tajawal مضمّن) + المقدمة ← الإعداد ← اللوحة ← السؤال
 src/
   types/question.ts             أنواع Question وBankQuestion وDifficulty وPlayableQuestion
   data/questions.ts             60 سؤال مكتوبة باليد في 6 فئات (تنحسب «سهل»)
@@ -41,16 +41,17 @@ src/
   data/bank.ts                  يجمع البنكين: العدد لكل فئة ومستوى، والتحقق عند أول استخدام
   data/categories.ts            24 فئة: الاسم العربي، الصورة/الأيقونة، والست المميزة أولًا
   data/getLocalQuestions.ts     حدّ البيانات: تحقّق + معرّفات ثابتة للإجابات
-  game/pickSession.ts           يختار 5 أسئلة ما انلعبت، لين تخلص أسئلة المستوى
+  game/board.ts                 اللوحة: 6 فئات × (100 100 300 300 500 500)، الفريقين، الدور، النقاط
+  game/pickSession.ts           سؤال ما انلعب لكل مربع، لين تخلص أسئلة المستوى
   game/gameReducer.ts           حالات اللعبة + المؤقّت (deadline) + 50/50؛ كل سؤال ينحسم مرة وحدة
   game/fiftyFifty.ts            اختيار إجابتين خطأ للحذف
   game/answerStatus.ts          حالة كل زر + كشف الإجابة الصحيحة بعد الغلط
   game/shuffle.ts               خلط Fisher–Yates للأسئلة والإجابات
   game/useTriviaGame.ts         hook: عدّاد العرض، انتهاء الوقت، الانتقال التلقائي، الرجوع من الخلفية
   screens/IntroScreen.tsx       فيديو المقدمة أول ما يفتح التطبيق (expo-video) مع «تخطّي»
-  screens/WelcomeScreen.tsx     شاشة البداية (الاسم + الفئات)
-  screens/LevelScreen.tsx       اختيار المستوى: سهل / متوسط / صعب، مع عدد الأسئلة
-  screens/GameScreen.tsx        شاشة اللعب (لعب + نتيجة)
+  screens/SetupScreen.tsx       الإعداد: أسماء الفريقين + اختيار 6 فئات
+  screens/BoardScreen.tsx       اللوحة: الفرق فوق (جوال) أو على الجنب (تابلت/ويب)، والنتيجة بالنهاية
+  screens/TileQuestionScreen.tsx سؤال المربع: مؤقّت مع إيقاف وإعادة، أجوبة 2×2، «اظهر الجواب»، 50/50 مرة لكل فريق
   components/                   المكوّنات القابلة لإعادة الاستخدام
   theme/theme.ts                الألوان والخطوط والمسافات واتجاه النص
 scripts/
@@ -61,40 +62,32 @@ scripts/
 
 ### المكوّنات
 
-| المكوّن | الملف | مكان الاستخدام |
-| --- | --- | --- |
-| `QuestionCard` | `src/components/QuestionCard.tsx` | `GameScreen` — بطاقة السؤال |
-| `AnswerButton` | `src/components/AnswerButton.tsx` | `GameScreen` — الأزرار الأربعة |
-| `ScoreBadge` | `src/components/ScoreBadge.tsx` | `GameScreen` — الهيدر (ظاهر دائمًا) |
-| `FeedbackBanner` | `src/components/FeedbackBanner.tsx` | `GameScreen` — صح عليك! / مو هذي الإجابة |
-| `PrimaryButton` | `src/components/PrimaryButton.tsx` | `WelcomeScreen` (ابدأ التحدّي)، `GameScreen` (التالي / شوف النتيجة)، `ResultsPanel` |
-| `ResultsPanel` | `src/components/ResultsPanel.tsx` | `GameScreen` — حالة النتيجة |
-| `CategoryBadge` | `src/components/CategoryBadge.tsx` | `WelcomeScreen` و `GameScreen` — شارة الفئة |
-| `ScreenLayout` | `src/components/ScreenLayout.tsx` | `WelcomeScreen` و `GameScreen` — الهيدر المنحني، المساحات الآمنة، التمرير، عمود RTL |
-| `FramedCard` | `src/components/FramedCard.tsx` | `QuestionCard` و `ResultsPanel` و `WelcomeScreen` — البطاقة بالإطار السماوي |
-| `GameTitle` | `src/components/GameTitle.tsx` | `WelcomeScreen` — شعار الاسم مع علامة «؟» خضرا |
-| `QuestionProgress` | `src/components/QuestionProgress.tsx` | `GameScreen` — «السؤال 2 من 5» وشريط الخطوات |
-| `QuestionTimer` | `src/components/QuestionTimer.tsx` | `GameScreen` — حلقة عدّ تنازلي، حمرا مع «أسرع!» آخر 5 ثوانٍ |
-| `FiftyFiftyButton` | `src/components/FiftyFiftyButton.tsx` | `GameScreen` — 50/50 مرة وحدة لكل لعبة |
-| `CategoryTile` | `src/components/CategoryTile.tsx` | `WelcomeScreen` — بطاقة فئة (صورة + عدد الأسئلة + ابدأ)؛ الضغط يفتح اختيار المستوى |
-| `ProgressRing` | `src/components/ProgressRing.tsx` | `QuestionTimer` و `InfoBanner` و `ResultsPanel` — حلقة تقدّم (react-native-svg) |
-| `InfoBanner` | `src/components/InfoBanner.tsx` | `WelcomeScreen` — شريط أخضر بقوانين اللعبة |
-| `SecondaryButton` | `src/components/SecondaryButton.tsx` | `ResultsPanel` — «غيّر الفئة» |
+| المكوّن | مكان الاستخدام |
+| --- | --- |
+| `BoardGrid` | `BoardScreen` — أعمدة الفئات ومربعات النقاط (✓ أو ✗ بعد ما ينلعب) |
+| `TeamCard` | `BoardScreen` — اسم الفريق، نقاطه مع −/+، الدور، و50/50 |
+| `CategoryTile` | `SetupScreen` — بطاقة فئة للاختيار (رقم الترتيب لما تنختار) |
+| `AnswerButton` / `FeedbackBanner` | `TileQuestionScreen` — الأجوبة (2×2) والنتيجة |
+| `TimerPill` / `FiftyFiftyButton` | `TileQuestionScreen` — الوقت مع إيقاف وإعادة، و50/50 |
+| `ScreenLayout` | كل الشاشات — المساحات الآمنة، التمرير، عمود RTL (أعرض للوحة) |
+| `GameTitle` / `InfoBanner` / `PrimaryButton` / `SecondaryButton` / `FramedCard` / `ProgressRing` | عام |
 
 ## مصدر الأسئلة
 
 كل الأسئلة عربية وداخل التطبيق، وما يتصل بأي خادم وقت اللعب.
 
 - **مكتوبة باليد:** 60 سؤال في 6 فئات (`src/data/questions.ts`)، وتنحسب مستوى «سهل».
-- **مولّدة بالذكاء الاصطناعي:** 1,027 سؤال في 24 فئة وثلاث مستويات (`src/data/bank.json`).
+- **مولّدة بالذكاء الاصطناعي:** 8,291 سؤال في 24 فئة وثلاث مستويات (`src/data/bank.json`، حوالي 2.5MB).
   انولّدت مرة وحدة بسكربت على الجهاز (`node scripts/generate-questions.mts`) عن طريق [OpenRouter](https://openrouter.ai):
   - `anthropic/claude-haiku-5.5` يكتب 20 سؤال لكل دفعة حسب الفئة والمستوى، ويشوف الأسئلة الموجودة عشان ما يكررها.
   - نموذج ثاني يدقّق كل سؤال (الإجابة صح؟ الخطأ خطأ أكيد؟ واضح؟ المستوى مناسب؟)، واللي ما ينجح ينحذف.
   - المفتاح ينكتب مخفي وقت التشغيل، وما ينحفظ ولا يدخل التطبيق أو Git.
   - المصروف ينجمع في `bank.json` ويوقف عند 5$. نموذج واحد لكل خطوة، ولو جاوب نموذج ثاني يوقف.
   - الأسئلة اللي انكتبت وما اندقّقت تنحفظ في `scripts/pending-questions.json` وتندقّق أول التشغيل الجاي.
-- **المستويات:** بعد ما تختار الفئة تختار سهل / متوسط / صعب. المستوى اللي فيه أقل من 5 أسئلة يطلع «قريبًا».
-- **كل لعبة مختلفة:** `pickSession` ما يكرر سؤال لين تخلص أسئلة المستوى، وأول لعبة بعدها ما تكرر اللعبة اللي قبلها.
+- **اللعبة:** فريقين يختارون 6 فئات. كل فئة عمود فيه 100 100 (سهل)، 300 300 (متوسط)، 500 500 (صعب).
+  الفريق اللي دوره يختار مربع ويجاوب؛ الصح يجيب النقاط، وبعدها الدور ينتقل. أزرار +/− لتصحيح النقاط، و«بدّل الدور».
+  تظهر بس الفئات اللي فيها سؤالين على الأقل بكل مستوى.
+- **كل مربع سؤال جديد:** `pickQuestion` ما يكرر سؤال لين تخلص أسئلة المستوى.
 
 ## أين الأسئلة؟
 

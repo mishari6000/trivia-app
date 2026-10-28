@@ -1,6 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-
-import { QUESTIONS_PER_GAME } from '../game/shuffle';
 import type { Bank, CategoryName, Difficulty, PlayableQuestion, Question } from '../types/question';
 import { categories, FEATURED, getCategory, type Category } from './categories';
 import { toPlayableQuestion } from './getLocalQuestions';
@@ -16,14 +13,7 @@ const generated = (bankFile as unknown as Bank).questions;
 
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 
-export const DIFFICULTY_INFO: Record<
-  Difficulty,
-  { label: string; hint: string; icon: keyof typeof Ionicons.glyphMap }
-> = {
-  easy: { label: 'سهل', hint: 'معلومات معروفة، تحمية', icon: 'leaf' },
-  medium: { label: 'متوسط', hint: 'تحتاج ثقافة عامة زينة', icon: 'flash' },
-  hard: { label: 'صعب', hint: 'للخبراء: أسماء وتواريخ وتفاصيل', icon: 'flame' },
-};
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = { easy: 'سهل', medium: 'متوسط', hard: 'صعب' };
 
 type Entry = Question & { difficulty: Difficulty };
 const entries: Entry[] = [
@@ -42,14 +32,17 @@ export function countQuestions(category: CategoryName, difficulty?: Difficulty):
   return levels.reduce((sum, d) => sum + (counts.get(keyOf(category, d)) ?? 0), 0);
 }
 
-/** A level can be played once it has enough questions for one full game. */
-export const isPlayable = (category: CategoryName, difficulty: Difficulty) =>
-  countQuestions(category, difficulty) >= QUESTIONS_PER_GAME;
+/** Questions a category needs at each level for one board: two tiles per level. */
+export const BOARD_QUESTIONS_PER_LEVEL = 2;
 
-/** Categories with at least one playable level, featured ones first. */
-export function playableCategories(): Category[] {
+/** A category can go on the board once every level has enough questions. */
+export const isBoardReady = (category: CategoryName) =>
+  DIFFICULTIES.every((d) => countQuestions(category, d) >= BOARD_QUESTIONS_PER_LEVEL);
+
+/** Categories that can go on a board, featured ones first. */
+export function boardCategories(): Category[] {
   const ordered = [...FEATURED.map(getCategory), ...categories.filter((c) => !FEATURED.includes(c.name))];
-  return ordered.filter((c) => DIFFICULTIES.some((d) => isPlayable(c.name, d)));
+  return ordered.filter((c) => isBoardReady(c.name));
 }
 
 // Validated lazily, one category and level at a time, so a big bank never slows the start.

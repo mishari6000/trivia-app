@@ -24,6 +24,10 @@ export type GameState = {
   lifelineUsed: boolean;
   /** The two wrong options removed by 50/50 on the active question. */
   removedOptionIds: string[];
+  /** Time left when the host paused the clock; null while it runs. */
+  pausedRemaining: number | null;
+  /** The host showed the answer without anyone answering (no points). */
+  revealedByHost: boolean;
 };
 
 /** `sessionId` + `index` identify a question, so stale timer callbacks can't resolve a new one. */
@@ -35,6 +39,10 @@ export type GameAction =
   | { type: 'next'; now: number }
   | { type: 'advance'; now: number } & QuestionRef
   | { type: 'fiftyFifty'; removeIds: string[]; now: number }
+  | { type: 'pause'; now: number }
+  | { type: 'resume'; now: number }
+  | { type: 'restartTimer'; now: number }
+  | { type: 'reveal'; now: number }
   | { type: 'restart'; questions: PlayableQuestion[]; now: number };
 
 export function createInitialState(
@@ -55,6 +63,8 @@ export function createInitialState(
     remainingAtResolve: null,
     lifelineUsed: false,
     removedOptionIds: [],
+    pausedRemaining: null,
+    revealedByHost: false,
   };
 }
 
@@ -70,6 +80,7 @@ function resolveTimeout(state: GameState): GameState {
     lastAnswerCorrect: false,
     timedOut: true,
     remainingAtResolve: 0,
+    pausedRemaining: null,
   };
 }
 
@@ -86,6 +97,22 @@ function resolveAnswer(state: GameState, optionId: string, now: number): GameSta
   };
 }
 
+/** The host shows the right answer: the question ends with nobody scoring. */
+function resolveReveal(state: GameState, now: number): GameState {
+  return {
+    ...state,
+    phase: 'feedback',
+    selectedOptionId: null,
+    lastAnswerCorrect: false,
+    timedOut: false,
+    revealedByHost: true,
+    remainingAtResolve: state.pausedRemaining ?? Math.max(0, state.deadline - now),
+    pausedRemaining: null,
+  };
+}
+
+const isPaused = (state: GameState) => state.pausedRemaining !== null;
+
 function goToNextQuestion(state: GameState, now: number): GameState {
   if (state.currentIndex >= state.questions.length - 1) return { ...state, phase: 'results' };
   return {
@@ -99,6 +126,8 @@ function goToNextQuestion(state: GameState, now: number): GameState {
     deadline: now + QUESTION_TIME_MS,
     remainingAtResolve: null,
     removedOptionIds: [],
+    pausedRemaining: null,
+    revealedByHost: false,
   };
 }
 
@@ -106,7 +135,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'answer': {
       // Only the first accepted tap counts; anything after resolution is ignored.
-      if (state.phase !== 'answering') return state;
+      if (state.phase !== 'answering' || isPaused(state)) return state;
       // A tap at or after the deadline is a timeout, even if the screen hasn't caught up.
       if (action.now >= state.deadline) return resolveTimeout(state);
       const question = state.questions[state.currentIndex];
@@ -115,7 +144,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return resolveAnswer(state, action.optionId, action.now);
     }
     case 'timeout': {
-      if (state.phase !== 'answering' || !isActiveQuestion(state, action)) return state;
+      if (state.phase !== 'answering' || isPaused(state) || !isActiveQuestion(state, action)) return state;
       if (action.now < state.deadline) return state;
       return resolveTimeout(state);
     }
@@ -131,7 +160,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return goToNextQuestion(state, action.now);
     }
     case 'fiftyFifty': {
-      if (state.phase !== 'answering' || state.lifelineUsed) return state;
+      if (state.phase !== 'answering' || state.lifelineUsed || isPaused(state)) return state;
       if (action.now >= state.deadline) return resolveTimeout(state);
       const question = state.questions[state.currentIndex];
       const ids = new Set(action.removeIds);
@@ -142,6 +171,24 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         );
       if (!valid) return state;
       return { ...state, lifelineUsed: true, removedOptionIds: [...action.removeIds] };
+    }
+    case 'pause': {
+      if (state.phase !== 'answering' || isPaused(state)) return state;
+      if (action.now >= state.deadline) return resolveTimeout(state);
+      return { ...state, pausedRemaining: state.deadline - action.now };
+    }
+    case 'resume': {
+      if (state.phase !== 'answering' || state.pausedRemaining === null) return state;
+      return { ...state, deadline: action.now + state.pausedRemaining, pausedRemaining: null };
+    }
+    case 'restartTimer': {
+      // A fresh full clock for the same question, e.g. after the host reads it out.
+      if (state.phase !== 'answering') return state;
+      return { ...state, deadline: action.now + QUESTION_TIME_MS, pausedRemaining: null };
+    }
+    case 'reveal': {
+      if (state.phase !== 'answering') return state;
+      return resolveReveal(state, action.now);
     }
     case 'restart':
       return createInitialState(action.questions, action.now, state.sessionId + 1);
@@ -154,6 +201,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 export function getRemainingMs(state: GameState, now: number): number {
   // Clamped so a display clock that is a tick behind never shows more than the full time.
   if (state.phase === 'answering') {
+    if (state.pausedRemaining !== null) return state.pausedRemaining;
     return Math.min(QUESTION_TIME_MS, Math.max(0, state.deadline - now));
   }
   return Math.max(0, state.remainingAtResolve ?? 0);

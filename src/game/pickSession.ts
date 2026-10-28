@@ -36,10 +36,10 @@ export function pickFresh(
 /** Questions already played, per category and level, for as long as the app is open. */
 const seenByLevel = new Map<string, Set<string>>();
 
-/** A new game's 5 questions for a category and level. */
-export function newGame(category: CategoryName, difficulty: Difficulty): PlayableQuestion[] {
+/** A fresh question for one board tile, never one already played while the app is open. */
+export function pickQuestion(category: CategoryName, difficulty: Difficulty): PlayableQuestion | undefined {
   const key = `${category}|${difficulty}`;
   const seen = seenByLevel.get(key) ?? new Set<string>();
   seenByLevel.set(key, seen);
-  return pickFresh(getQuestions(category, difficulty), seen);
+  return pickFresh(getQuestions(category, difficulty), seen, Math.random, 1)[0];
 }

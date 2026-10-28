@@ -18,9 +18,9 @@ export const WRITER_MODEL = 'anthropic/claude-haiku-5.5';
 export const CHECKER_MODEL = 'anthropic/claude-haiku-5.5';
 
 /** Hard spending cap for all runs together (tracked in bank.json). */
-export const BUDGET_USD = 5;
+export const BUDGET_USD = 10;
 /** Questions kept per category and level. */
-export const TARGET_PER_LEVEL = 100;
+export const TARGET_PER_LEVEL = 200;
 /** Questions asked for in each request. */
 export const BATCH_SIZE = 20;
 
@@ -155,6 +155,9 @@ export function buildWriteRequest(
   return {
     model: WRITER_MODEL,
     max_tokens: 6_000,
+    // Haiku 5.5 thinks at medium effort by default, and thinking shares max_tokens: it cut
+    // off many answers. Writing needs no thinking.
+    reasoning: { effort: 'none' },
     ...common('trivia_questions', WRITE_SCHEMA),
     messages: [
       {
@@ -190,7 +193,9 @@ export function buildCheckRequest(items: BankQuestion[], model = CHECKER_MODEL) 
     .join('\n');
   return {
     model,
-    max_tokens: 4_000,
+    max_tokens: 8_000,
+    // A little thinking helps fact-checking; the token limit leaves room for the answer.
+    reasoning: { effort: 'low' },
     ...common('trivia_check', CHECK_SCHEMA),
     messages: [
       {
@@ -272,6 +277,15 @@ export function applyCheck(items: BankQuestion[], content: string): BankQuestion
     approved.add(n);
   }
   return items.filter((_, n) => approved.has(n));
+}
+
+/**
+ * The most a request can cost: every prompt character counted as a token (an overestimate)
+ * and the full max_tokens of output. Reserved before sending, so the budget is never passed.
+ */
+export function maxCallCost(body: { model: string; max_tokens: number; messages: unknown }): number {
+  const price = PRICES[body.model] ?? FALLBACK_PRICE;
+  return (JSON.stringify(body.messages).length * price.input + body.max_tokens * price.output) / 1e6;
 }
 
 /** A request's cost: OpenRouter's own figure, or an estimate from the token counts. */

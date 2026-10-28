@@ -1,7 +1,7 @@
-import { countQuestions, getQuestions, isPlayable, playableCategories } from '../../data/bank';
+import { boardCategories, countQuestions, getQuestions, isBoardReady } from '../../data/bank';
 import { FEATURED } from '../../data/categories';
 import { getLocalQuestions } from '../../data/getLocalQuestions';
-import { newGame, pickFresh } from '../pickSession';
+import { pickFresh, pickQuestion } from '../pickSession';
 
 describe('picking a game', () => {
   it('never repeats a question until the level runs out, then starts a new cycle', () => {
@@ -28,25 +28,26 @@ describe('picking a game', () => {
     expect(seen).toEqual(new Set(game));
   });
 
-  it('newGame gives a different game each time for the same category and level', () => {
-    const a = newGame('Geography', 'easy').map((q) => q.id);
-    const b = newGame('Geography', 'easy').map((q) => q.id);
-    a.forEach((id) => expect(b).not.toContain(id));
+  it('pickQuestion gives each board tile a question not played yet', () => {
+    const ids = Array.from({ length: 10 }, () => pickQuestion('Geography', 'easy')?.id);
+    expect(new Set(ids).size).toBe(10);
+    ids.forEach((id) => expect(id).toBeDefined());
   });
 });
 
 describe('question bank', () => {
-  it('counts the hand-written questions as easy, so the featured six are always playable', () => {
+  it('counts the hand-written questions as easy, and offers only categories a board can fill', () => {
     FEATURED.forEach((name) => {
       expect(countQuestions(name, 'easy')).toBeGreaterThanOrEqual(10);
-      expect(isPlayable(name, 'easy')).toBe(true);
       expect(getQuestions(name, 'easy').every((q) => q.language === 'ar' && q.category === name)).toBe(true);
     });
-    expect(playableCategories().slice(0, 6).map((c) => c.name)).toEqual(FEATURED);
+    // Every offered category has two questions at each level for its six tiles.
+    expect(boardCategories().length).toBeGreaterThanOrEqual(6);
+    boardCategories().forEach((c) => expect(isBoardReady(c.name)).toBe(true));
   });
 
   it('every generated question is valid and in Arabic', () => {
-    for (const category of playableCategories()) {
+    for (const category of boardCategories()) {
       for (const level of ['easy', 'medium', 'hard'] as const) {
         expect(getQuestions(category.name, level)).toHaveLength(countQuestions(category.name, level));
       }

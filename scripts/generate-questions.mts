@@ -3,14 +3,16 @@
 // one, and saves the approved ones to src/data/bank.json (shipped in the app).
 //
 // Usage: node scripts/generate-questions.mts [--target 100] [--only "History,Sports"]
-//          [--checker anthropic/claude-sonnet-5.5] [--budget 5] [--recheck]
+//          [--checker anthropic/claude-sonnet-5.5] [--budget 10] [--recheck]
 // The API key is read from OPENROUTER_API_KEY, or asked for with hidden input. It is never
 // written to disk, and must never be committed or shipped inside the app.
 //
-// Spending is added up in bank.json across runs and stops before the budget (default $5).
+// Spending is added up in bank.json across runs and never passes the budget (default $10):
+// before every request (retries too) its worst-case cost is reserved, and nothing is sent if
+// spent + reserved could go over.
 // Safety: one fixed model per step (the run stops if another model answers); written
 // questions are saved to scripts/pending-questions.json before they are checked, so a failed
-// check never throws them away; three failed checks in a row stop the whole run.
+// check never throws them away; three cut-off or unreadable answers in a row stop the run.
 
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -26,6 +28,7 @@ import {
   CATEGORY_NAMES,
   CHECKER_MODEL,
   costOf,
+  maxCallCost,
   DIFFICULTIES,
   normalize,
   OPENROUTER_URL,
@@ -38,9 +41,10 @@ const BANK_PATH = path.join('src', 'data', 'bank.json');
 const PENDING_PATH = path.join('scripts', 'pending-questions.json');
 const PARALLEL = 10;
 const MAX_ROUNDS = 15;
-const MAX_FAILED_CHECKS_IN_A_ROW = 3;
-/** Most recent questions of a category sent to the writer as «don't repeat these». */
-const AVOID_LIMIT = 250;
+const MAX_FAILURES_IN_A_ROW = 3;
+/** Questions sent to the writer as «don't repeat these»: this level's, then the category's others. */
+const AVOID_SAME_LEVEL = 200;
+const AVOID_OTHER_LEVELS = 100;
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -133,18 +137,27 @@ function save() {
 
 const count = (category: CategoryName, difficulty: Difficulty) =>
   bank.questions.filter((q) => q.category === category && q.difficulty === difficulty).length;
-// Stop early enough that the batches still running cannot push spending past the budget:
-// about $0.003 per batch with Haiku checking, about $0.015 with Sonnet.
-const reserve = PARALLEL * (checker.includes('haiku') ? 0.004 : 0.015);
-const canSpend = () => bank.meta.spentUsd + reserve < budget;
+/** Worst-case cost of the requests in flight right now. */
+let reserved = 0;
+/** Room for at least one more full batch (a write and a check at their worst case). */
+const canSpend = () => bank.meta.spentUsd + reserved + 0.02 < budget;
 
 class Fatal extends Error {}
+class BudgetReached extends Fatal {}
 
 type Reply = { content: string; truncated: boolean };
 const loggedModels = new Set<string>();
 
-async function call(apiKey: string, body: { model: string }): Promise<Reply> {
+async function call(
+  apiKey: string,
+  body: { model: string; max_tokens: number; messages: unknown },
+): Promise<Reply> {
+  const worst = maxCallCost(body);
   for (let attempt = 0; ; attempt++) {
+    // Once the run is stopping, no worker sends anything new.
+    if (stopped) throw new Fatal(stopped);
+    if (bank.meta.spentUsd + reserved + worst > budget) throw new BudgetReached('budget');
+    reserved += worst;
     let res: Response | undefined;
     let json: {
       model?: string;
@@ -165,10 +178,16 @@ async function call(apiKey: string, body: { model: string }): Promise<Reply> {
         signal: AbortSignal.timeout(180_000),
       });
       json = await res.json();
-      bank.meta.spentUsd += costOf(json);
     } catch (error) {
-      if (attempt >= 3) throw error;
+      if (attempt >= 3) {
+        reserved -= worst;
+        bank.meta.spentUsd += worst; // unknown cost (timeout?): count the worst case
+        throw error;
+      }
     }
+    reserved -= worst;
+    // No reported cost (timeout, broken body): count the worst case, never zero.
+    bank.meta.spentUsd += json.usage ? costOf(json) : worst;
     if (res && [401, 402, 403].includes(res.status)) {
       throw new Fatal(`OpenRouter ${res.status}: ${json.error?.message ?? 'key or credit problem'}`);
     }
@@ -189,24 +208,26 @@ async function call(apiKey: string, body: { model: string }): Promise<Reply> {
   }
 }
 
-let failedChecksInARow = 0;
+let failuresInARow = 0;
+
+/** A cut-off or unreadable answer; three in a row stop the run instead of paying for more. */
+function failed(what: string) {
+  failuresInARow++;
+  if (failuresInARow >= MAX_FAILURES_IN_A_ROW) {
+    throw new Fatal(`${what} — ${failuresInARow} times in a row, stopping.`);
+  }
+}
 
 /** Checks questions (all one category and level) and moves the approved ones into the bank. */
 async function check(apiKey: string, items: BankQuestion[]): Promise<number> {
   const reply = await call(apiKey, buildCheckRequest(items, checker));
   const approved = reply.truncated ? null : applyCheck(items, reply.content);
   if (approved === null) {
-    // Unreadable answer: keep the questions pending for the next run, and stop if it repeats.
-    failedChecksInARow++;
-    if (failedChecksInARow >= MAX_FAILED_CHECKS_IN_A_ROW) {
-      throw new Fatal(
-        `The checker's answer could not be read ${failedChecksInARow} times in a row ` +
-          `(${reply.truncated ? 'cut off at the token limit' : 'not valid JSON'}) — stopping.`,
-      );
-    }
+    // Unreadable answer: the questions stay pending for the next run.
+    failed(`Check answer ${reply.truncated ? 'cut off at the token limit' : 'not valid JSON'}`);
     return 0;
   }
-  failedChecksInARow = 0;
+  failuresInARow = 0;
   const ids = new Set(items.map((q) => q.id));
   pending = pending.filter((q) => !ids.has(q.id));
   const { category, difficulty } = items[0];
@@ -218,14 +239,16 @@ async function check(apiKey: string, items: BankQuestion[]): Promise<number> {
 
 /** One batch for one category and level: write (saved as pending), then check. */
 async function batch(apiKey: string, category: CategoryName, difficulty: Difficulty) {
-  const avoid = [...handWritten, ...bank.questions, ...pending]
-    .filter((q) => q.category === category)
-    .map((q) => q.question)
-    .slice(-AVOID_LIMIT);
+  const own = [...bank.questions, ...pending].filter((q) => q.category === category);
+  const avoid = [
+    ...own.filter((q) => q.difficulty === difficulty).slice(-AVOID_SAME_LEVEL),
+    ...[...handWritten, ...own].filter((q) => q.category === category && (q as BankQuestion).difficulty !== difficulty).slice(-AVOID_OTHER_LEVELS),
+  ].map((q) => q.question);
   const reply = await call(apiKey, buildWriteRequest(category, difficulty, avoid));
-  const written = parseWritten(reply.content, category, difficulty).filter(
-    (q) => !known.has(normalize(q.question)),
-  );
+  const parsed = reply.truncated ? [] : parseWritten(reply.content, category, difficulty);
+  if (!parsed.length) failed(`Write answer ${reply.truncated ? 'cut off at the token limit' : 'empty or not valid JSON'}`);
+  else failuresInARow = 0;
+  const written = parsed.filter((q) => !known.has(normalize(q.question)));
   written.forEach((q) => known.add(normalize(q.question)));
   pending.push(...written);
   save();
@@ -255,7 +278,8 @@ async function runPool<T>(tasks: T[], run: (task: T) => Promise<void>) {
       try {
         await run(task);
       } catch (error) {
-        if (error instanceof Fatal) stopped = error.message;
+        if (error instanceof BudgetReached) stopped ||= 'budget';
+        else if (error instanceof Fatal) stopped ||= error.message;
         else console.log(`  skipped (${(error as Error).message})`);
       }
     }

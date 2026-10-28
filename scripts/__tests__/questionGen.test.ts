@@ -8,6 +8,7 @@ import {
   CATEGORY_NAMES,
   CHECKER_MODEL,
   costOf,
+  maxCallCost,
   parseWritten,
   questionId,
   WRITER_MODEL,
@@ -37,7 +38,9 @@ describe('question generation (offline script)', () => {
     expect(body.messages[0].content).toContain('HARD');
     expect(body.messages[1].content).toContain('«تاريخ»');
     expect(body.messages[1].content).toContain('ما عاصمة الكويت؟');
-    expect(BUDGET_USD).toBe(5);
+    // Thinking shares max_tokens and cut answers off: none for writing.
+    expect(body.reasoning).toEqual({ effort: 'none' });
+    expect(BUDGET_USD).toBe(10);
   });
 
   it('keeps only well-formed, unambiguous questions, tagged with the level', () => {
@@ -68,6 +71,7 @@ describe('question generation (offline script)', () => {
     const checkBody = buildCheckRequest(items);
     expect(checkBody.model).toBe(CHECKER_MODEL);
     expect(checkBody).not.toHaveProperty('temperature');
+    expect(checkBody.reasoning).toEqual({ effort: 'low' });
     expect(buildCheckRequest(items, 'anthropic/claude-sonnet-5.5').model).toBe('anthropic/claude-sonnet-5.5');
     const verdict = JSON.stringify({
       results: [
@@ -90,5 +94,13 @@ describe('question generation (offline script)', () => {
       costOf({ model: 'anthropic/claude-haiku-5.5', usage: { prompt_tokens: 1_000_000, completion_tokens: 1_000_000 } }),
     ).toBeCloseTo(0.6);
     expect(costOf({})).toBe(0);
+  });
+
+  it('reserves a worst case at least as high as any real request can cost', () => {
+    const body = buildWriteRequest('History', 'easy', Array(200).fill('سؤال طويل نوعًا ما عن التاريخ؟'));
+    const worst = maxCallCost(body);
+    // Full output at Haiku's output price, plus the prompt.
+    expect(worst).toBeGreaterThan((body.max_tokens * 0.5) / 1e6);
+    expect(worst).toBeLessThan(0.02);
   });
 });

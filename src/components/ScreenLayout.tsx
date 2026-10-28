@@ -16,10 +16,18 @@ type ScreenLayoutProps = {
   /** `hero` puts the header on a rounded green gradient block; `plain` keeps it on the page. */
   variant?: 'hero' | 'plain';
   scrollRef?: Ref<ScrollViewInstance>;
+  /** Wider than a phone column, for the board on tablets and the web. */
+  maxWidth?: number;
 };
 
 /** Header, safe areas, scrolling and the centered phone-width RTL column. */
-export function ScreenLayout({ header, children, variant = 'plain', scrollRef }: ScreenLayoutProps) {
+export function ScreenLayout({
+  header,
+  children,
+  variant = 'plain',
+  scrollRef,
+  maxWidth = MAX_CONTENT_WIDTH,
+}: ScreenLayoutProps) {
   const insets = useSafeAreaInsets();
   const sidePadding = {
     paddingLeft: insets.left + spacing.lg,
@@ -41,13 +49,13 @@ export function ScreenLayout({ header, children, variant = 'plain', scrollRef }:
             { paddingTop: insets.top + spacing.lg },
           ]}
         >
-          <View {...webRtlProps} style={[styles.column, nativeRtlStyle]}>
+          <View {...webRtlProps} style={[styles.column, { maxWidth }, nativeRtlStyle]}>
             {header}
           </View>
         </View>
 
         <View style={[styles.body, sidePadding]}>
-          <View {...webRtlProps} style={[styles.column, styles.bodyColumn, nativeRtlStyle]}>
+          <View {...webRtlProps} style={[styles.column, { maxWidth }, styles.bodyColumn, nativeRtlStyle]}>
             {children}
           </View>
         </View>
@@ -82,7 +90,6 @@ const styles = StyleSheet.create({
   },
   column: {
     width: '100%',
-    maxWidth: MAX_CONTENT_WIDTH,
   },
   bodyColumn: {
     flex: 1,
