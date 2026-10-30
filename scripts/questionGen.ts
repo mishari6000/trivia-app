@@ -113,7 +113,7 @@ const WRITE_SCHEMA = {
   },
 };
 
-const CHECK_SCHEMA = {
+export const CHECK_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   required: ['results'],
@@ -183,14 +183,29 @@ export function buildWriteRequest(
   };
 }
 
+/** The checker's instructions and numbered list, shared with the «صمم فئتك» server. */
+export function checkPrompt(items: BankQuestion[]): { system: string; user: string } {
+  return {
+    system: [
+      'You are a strict fact-checker for an Arabic trivia game. For each numbered question,',
+      'set ok=true ONLY if: the marked correct answer is definitely correct; each of the three wrong',
+      'answers is definitely wrong; the question is clear, has one answer and is not time-sensitive;',
+      'and the Arabic is correct. When in doubt, ok=false.',
+      'Also rate how hard it is for a general Arab audience: easy, medium or hard.',
+      'Return one result per question, with n = its number.',
+    ].join(' '),
+    user: items
+      .map(
+        (q, n) =>
+          `${n}. ${q.question}\n   الصحيحة: ${q.correctAnswer}\n   الخاطئة: ${q.incorrectAnswers.join(' | ')}`,
+      )
+      .join('\n'),
+  };
+}
+
 /** Asks the checker to verify each numbered question and rate its level. */
 export function buildCheckRequest(items: BankQuestion[], model = CHECKER_MODEL) {
-  const list = items
-    .map(
-      (q, n) =>
-        `${n}. ${q.question}\n   الصحيحة: ${q.correctAnswer}\n   الخاطئة: ${q.incorrectAnswers.join(' | ')}`,
-    )
-    .join('\n');
+  const prompt = checkPrompt(items);
   return {
     model,
     max_tokens: 8_000,
@@ -198,18 +213,8 @@ export function buildCheckRequest(items: BankQuestion[], model = CHECKER_MODEL) 
     reasoning: { effort: 'low' },
     ...common('trivia_check', CHECK_SCHEMA),
     messages: [
-      {
-        role: 'system',
-        content: [
-          'You are a strict fact-checker for an Arabic trivia game. For each numbered question,',
-          'set ok=true ONLY if: the marked correct answer is definitely correct; each of the three wrong',
-          'answers is definitely wrong; the question is clear, has one answer and is not time-sensitive;',
-          'and the Arabic is correct. When in doubt, ok=false.',
-          'Also rate how hard it is for a general Arab audience: easy, medium or hard.',
-          'Return one result per question, with n = its number.',
-        ].join(' '),
-      },
-      { role: 'user', content: list },
+      { role: 'system', content: prompt.system },
+      { role: 'user', content: prompt.user },
     ],
   };
 }
