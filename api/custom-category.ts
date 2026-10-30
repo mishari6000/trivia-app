@@ -41,8 +41,11 @@ function allowed(ip: string, now: number): boolean {
 }
 
 class Upstream extends Error {
-  constructor(readonly status: number) {
-    super(`OpenRouter ${status}`);
+  constructor(
+    readonly status: number,
+    readonly reason = '',
+  ) {
+    super(`OpenRouter ${status}${reason ? `: ${reason}` : ''}`);
   }
 }
 
@@ -58,10 +61,16 @@ async function complete(key: string, body: object): Promise<string> {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Upstream(res.status);
+  if (!res.ok) {
+    // OpenRouter's own reason (never the key), for the function logs and the response.
+    const detail = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
+    throw new Upstream(res.status, detail.error?.message?.slice(0, 200) ?? '');
+  }
   const data = (await res.json()) as { choices?: { finish_reason?: string; message?: { content?: string } }[] };
   const choice = data.choices?.[0];
-  if (!choice?.message?.content || choice.finish_reason === 'length') throw new Upstream(502);
+  if (!choice?.message?.content || choice.finish_reason === 'length') {
+    throw new Upstream(502, `no content (finish ${choice?.finish_reason ?? 'none'})`);
+  }
   return choice.message.content;
 }
 
@@ -96,8 +105,9 @@ export async function POST(request: Request): Promise<Response> {
     return json({ topic, questions });
   } catch (error) {
     const status = error instanceof Upstream ? error.status : 502;
+    console.error('custom-category:', error instanceof Error ? error.message : error);
     if (status === 429) return json({ error: 'rate-limit' }, 429);
     if (status === 402) return json({ error: 'budget' }, 402);
-    return json({ error: 'upstream' }, 502);
+    return json({ error: 'upstream', status, reason: error instanceof Upstream ? error.reason : '' }, 502);
   }
 }
