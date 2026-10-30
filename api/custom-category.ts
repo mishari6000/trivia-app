@@ -80,8 +80,11 @@ export function OPTIONS(): Response {
 
 export async function POST(request: Request): Promise<Response> {
   // The project stores the key as «Haiku»; OPENROUTER_API_KEY is accepted too.
-  const key = process.env.OPENROUTER_API_KEY || process.env.Haiku;
+  const key = (process.env.OPENROUTER_API_KEY || process.env.Haiku || '').trim();
   if (!key) return json({ error: 'not-configured' }, 503);
+  // OpenRouter keys look like «sk-or-v1-…»; anything else (a model name, a stray quote or
+  // «Bearer …») is a setup mistake. Only the verdict is reported, never the value.
+  if (!/^sk-or-[A-Za-z0-9_-]{20,}$/.test(key)) return json({ error: 'not-configured', reason: 'key-format' }, 503);
 
   let topic: string | null;
   try {
