@@ -13,7 +13,7 @@ import {
  *
  * «صمم فئتك»: writes questions about the player's topic with OpenRouter, fact-checks them,
  * and returns 2 easy, 2 medium and 1 hard. The key lives only in the OPENROUTER_API_KEY
- * environment variable on Vercel. The five-a-month limit is kept on each device; the real
+ * environment variable (named «Haiku» in this project) on Vercel. The five-a-month limit is kept on each device; the real
  * money cap is the key's own monthly limit on OpenRouter.
  * Errors: not-configured (503), invalid-topic (400), bad-topic (422), rate-limit (429),
  * budget (402), not-enough / upstream (502).
@@ -70,7 +70,8 @@ export function OPTIONS(): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const key = process.env.OPENROUTER_API_KEY;
+  // The project stores the key as «Haiku»; OPENROUTER_API_KEY is accepted too.
+  const key = process.env.OPENROUTER_API_KEY || process.env.Haiku;
   if (!key) return json({ error: 'not-configured' }, 503);
 
   let topic: string | null;
