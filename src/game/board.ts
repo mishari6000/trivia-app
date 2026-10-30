@@ -2,6 +2,8 @@ import type { CategoryName, Difficulty } from '../types/question';
 
 /** Rows of every column, top to bottom: two tiles per level. */
 export const ROW_POINTS = [100, 100, 300, 300, 500, 500] as const;
+/** «صمم فئتك» has five AI questions a month, so its column stops at one 500. */
+export const CUSTOM_ROW_POINTS = [100, 100, 300, 300, 500] as const;
 export const POINTS_LEVEL: Record<(typeof ROW_POINTS)[number], Difficulty> = {
   100: 'easy',
   300: 'medium',
@@ -44,7 +46,7 @@ export function createBoard(categories: CategoryName[], teamNames: [string, stri
   return {
     categories,
     tiles: categories.flatMap((category) =>
-      ROW_POINTS.map((points, row) => ({
+      (category === 'Custom' ? CUSTOM_ROW_POINTS : ROW_POINTS).map((points, row) => ({
         id: `${category}|${row}`,
         category,
         points,

@@ -1,4 +1,4 @@
-import type { BankQuestion, CategoryName, Difficulty } from '../src/types/question';
+import type { BankCategoryName, BankQuestion, CategoryName, Difficulty } from '../src/types/question';
 
 /**
  * Offline question generation with OpenRouter, shared by scripts/generate-questions.ts and
@@ -42,7 +42,7 @@ const LEVEL_GUIDE: Record<Difficulty, string> = {
 };
 
 /** What each category is about, for the prompt (Arabic label + English topic hint). */
-export const CATEGORY_TOPICS: Record<CategoryName, { label: string; topic: string }> = {
+export const CATEGORY_TOPICS: Record<BankCategoryName, { label: string; topic: string }> = {
   'General Knowledge': { label: 'معلومات عامة', topic: 'general knowledge' },
   'Entertainment: Books': { label: 'كتب', topic: 'famous books, authors and literature, Arabic and world' },
   'Entertainment: Film': { label: 'أفلام', topic: 'well-known films, directors and cinema history' },
@@ -69,7 +69,7 @@ export const CATEGORY_TOPICS: Record<CategoryName, { label: string; topic: strin
   'Entertainment: Cartoon & Animations': { label: 'رسوم متحركة', topic: 'cartoons and animated films' },
 };
 
-export const CATEGORY_NAMES = Object.keys(CATEGORY_TOPICS) as CategoryName[];
+export const CATEGORY_NAMES = Object.keys(CATEGORY_TOPICS) as BankCategoryName[];
 
 export const normalize = (s: string) =>
   s
@@ -143,7 +143,7 @@ const common = (name: string, schema: object) => ({
 
 /** Asks the writer for a batch of new questions, avoiding everything the category already has. */
 export function buildWriteRequest(
-  category: CategoryName,
+  category: BankCategoryName,
   difficulty: Difficulty,
   avoid: string[],
   count = BATCH_SIZE,

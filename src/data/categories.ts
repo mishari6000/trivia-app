@@ -173,6 +173,10 @@ export const FEATURED: CategoryName[] = [
   'Animals',
 ];
 
+/** «صمم فئتك»: not in the bank; its questions are generated for the player's own topic. */
+export const CUSTOM_CATEGORY: Category = { name: 'Custom', label: 'صمم فئتك', icon: 'sparkles' };
+
 export function getCategory(name: CategoryName): Category {
+  if (name === 'Custom') return CUSTOM_CATEGORY;
   return categories.find((c) => c.name === name) ?? categories[0];
 }

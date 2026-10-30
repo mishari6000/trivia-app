@@ -54,3 +54,12 @@ describe('board', () => {
     expect(winner(board)).toBe(0);
   });
 });
+
+describe('«صمم فئتك» column', () => {
+  it('has five tiles: 100 100 300 300 500', () => {
+    const board = createBoard(['Custom', 'History', 'Geography', 'Sports', 'Art', 'Animals'], ['أ', 'ب']);
+    const custom = board.tiles.filter((t) => t.category === 'Custom');
+    expect(custom.map((t) => t.points)).toEqual([100, 100, 300, 300, 500]);
+    expect(board.tiles).toHaveLength(35);
+  });
+});

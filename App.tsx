@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { customQuestionFor, type SavedCustom } from './src/data/customCategory';
 import { boardReducer, createBoard, type BoardAction, type BoardState, type Tile } from './src/game/board';
 import { pickQuestion } from './src/game/pickSession';
 import { BoardScreen } from './src/screens/BoardScreen';
@@ -27,6 +28,7 @@ export default function App() {
   const [teamNames, setTeamNames] = useState<[string, string]>(DEFAULT_TEAM_NAMES);
   const [board, setBoard] = useState<BoardState | null>(null);
   const [active, setActive] = useState<Active | null>(null);
+  const [custom, setCustom] = useState<SavedCustom | null>(null);
   // Fonts ship inside the app bundle; nothing is downloaded at runtime.
   const [fontsLoaded, fontError] = useFonts({
     Tajawal_400Regular,
@@ -41,7 +43,10 @@ export default function App() {
     setScreen('board');
   };
   const pickTile = (tile: Tile) => {
-    const question = pickQuestion(tile.category, tile.difficulty);
+    const question =
+      tile.category === 'Custom'
+        ? custom && customQuestionFor(tile, custom)
+        : pickQuestion(tile.category, tile.difficulty);
     if (!question) return;
     setActive({ tile, questions: [question] });
     setScreen('question');
@@ -59,9 +64,10 @@ export default function App() {
         <SetupScreen
           initialCategories={picked}
           initialNames={teamNames}
-          onStart={(categories, names) => {
+          onStart={(categories, names, saved) => {
             setPicked(categories);
             setTeamNames(names);
+            setCustom(saved);
             newBoard(categories, names);
           }}
         />
@@ -69,6 +75,7 @@ export default function App() {
       {screen === 'board' && board ? (
         <BoardScreen
           board={board}
+          customTopic={custom?.topic ?? null}
           onPick={pickTile}
           onAdjust={(team, delta) => update({ type: 'adjust', team, delta })}
           onSwitchTurn={() => update({ type: 'switchTurn' })}
@@ -80,6 +87,7 @@ export default function App() {
         <TileQuestionScreen
           key={active.tile.id}
           tile={active.tile}
+          customTopic={custom?.topic ?? null}
           questions={active.questions}
           teams={board.teams}
           turn={board.turn}

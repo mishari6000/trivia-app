@@ -13,6 +13,7 @@ import { colors, fonts, radius, spacing } from '../theme/theme';
 
 type BoardScreenProps = {
   board: BoardState;
+  customTopic: string | null;
   onPick: (tile: Tile) => void;
   onAdjust: (team: TeamIndex, delta: number) => void;
   onSwitchTurn: () => void;
@@ -28,6 +29,7 @@ const SHORT_MAX = 520;
 /** The game board: six category columns of point tiles, with both teams' scores. */
 export function BoardScreen({
   board,
+  customTopic,
   onPick,
   onAdjust,
   onSwitchTurn,
@@ -108,7 +110,7 @@ export function BoardScreen({
           </View>
           <View style={styles.wideBoard}>
             {results}
-            <BoardGrid categories={board.categories} tiles={board.tiles} compact={false} short={short} onPick={onPick} />
+            <BoardGrid categories={board.categories} tiles={board.tiles} customTopic={customTopic} compact={false} short={short} onPick={onPick} />
           </View>
         </View>
       </ScreenLayout>
@@ -132,7 +134,7 @@ export function BoardScreen({
         </View>
       ) : null}
       {results}
-      <BoardGrid categories={board.categories} tiles={board.tiles} compact onPick={onPick} />
+      <BoardGrid categories={board.categories} tiles={board.tiles} customTopic={customTopic} compact onPick={onPick} />
     </ScreenLayout>
   );
 }

@@ -4,6 +4,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getCategory } from '../data/categories';
 import type { Tile } from '../game/board';
 import { colors, fonts, radius, spacing } from '../theme/theme';
+import { AiBadge } from './AiBadge';
 import type { CategoryName } from '../types/question';
 
 type BoardGridProps = {
@@ -13,32 +14,48 @@ type BoardGridProps = {
   compact: boolean;
   /** A phone on its side: wide layout, but low headers and tiles so more fits. */
   short?: boolean;
+  /** The player's topic for the «صمم فئتك» column. */
+  customTopic?: string | null;
   onPick: (tile: Tile) => void;
 };
 
-/** One column per category: its picture and name, then 100 100 300 300 500 500. */
-export function BoardGrid({ categories, tiles, compact, short = false, onPick }: BoardGridProps) {
+/**
+ * One column per category: its picture and name, then 100 100 300 300 500 500. The
+ * «صمم فئتك» column has an AI mark, the player's topic and five tiles.
+ */
+export function BoardGrid({ categories, tiles, compact, short = false, customTopic, onPick }: BoardGridProps) {
   return (
     <View style={[styles.board, compact && styles.boardCompact]}>
       {categories.map((name) => {
         const category = getCategory(name);
+        const custom = name === 'Custom';
+        const label = custom ? (customTopic ?? category.label) : category.label;
         return (
           <View key={name} style={[styles.column, compact && styles.columnCompact]}>
             <View style={[styles.header, compact && styles.headerCompact, short && styles.headerShort]}>
               {category.image ? (
                 <Image source={category.image} style={[styles.image, short && styles.imageShort]} resizeMode="cover" />
               ) : (
-                <View style={styles.iconBox}>
-                  <Ionicons name={category.icon} size={compact ? 24 : 40} color={colors.primaryBright} />
+                <View style={[styles.iconBox, custom && styles.iconBoxCustom, short && styles.imageShort]}>
+                  <Ionicons
+                    name={category.icon}
+                    size={compact ? 24 : 40}
+                    color={custom ? colors.textOnLight : colors.primaryBright}
+                  />
                 </View>
               )}
+              {custom ? (
+                <View style={styles.aiMark}>
+                  <AiBadge small={compact} />
+                </View>
+              ) : null}
               <View style={[styles.labelBar, compact && styles.labelBarCompact, short && styles.labelBarShort]}>
                 <Text
                   style={[styles.label, compact && styles.labelCompact, short && styles.labelShort]}
                   numberOfLines={2}
                   adjustsFontSizeToFit
                 >
-                  {category.label}
+                  {label}
                 </Text>
               </View>
             </View>
@@ -54,7 +71,7 @@ export function BoardGrid({ categories, tiles, compact, short = false, onPick }:
                     onPress={() => onPick(tile)}
                     disabled={played !== null}
                     accessibilityRole="button"
-                    accessibilityLabel={`${category.label} ${tile.points}${played ? '، انلعب' : ''}`}
+                    accessibilityLabel={`${label} ${tile.points}${played ? '، انلعب' : ''}`}
                     accessibilityState={{ disabled: played !== null }}
                     style={({ pressed }) => [
                       styles.tile,
@@ -76,6 +93,16 @@ export function BoardGrid({ categories, tiles, compact, short = false, onPick }:
                   </Pressable>
                 );
               })}
+            {custom ? (
+              // Five AI questions a month: the sixth slot stays empty.
+              <View
+                style={[styles.tile, compact && styles.tileCompact, short && styles.tileShort, styles.emptySlot]}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                <Ionicons name="sparkles-outline" size={compact ? 16 : 22} color={colors.textMuted} />
+              </View>
+            ) : null}
           </View>
         );
       })}
@@ -131,6 +158,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconBoxCustom: {
+    backgroundColor: colors.teamTwo,
+  },
+  aiMark: {
+    position: 'absolute',
+    top: spacing.xs,
+    start: spacing.xs,
+  },
+  emptySlot: {
+    borderStyle: 'dashed',
+    borderColor: colors.border,
+    backgroundColor: 'transparent',
   },
   labelBar: {
     minHeight: 44,

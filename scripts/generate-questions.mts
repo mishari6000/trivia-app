@@ -18,7 +18,7 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { questions as handWritten } from '../src/data/questions.ts';
-import type { Bank, BankQuestion, CategoryName, Difficulty } from '../src/types/question.ts';
+import type { Bank, BankQuestion, BankCategoryName, Difficulty } from '../src/types/question.ts';
 import {
   applyCheck,
   BATCH_SIZE,
@@ -54,7 +54,7 @@ const target = Number(arg('target') ?? TARGET_PER_LEVEL);
 const budget = Number(arg('budget') ?? BUDGET_USD);
 const checker = arg('checker') ?? CHECKER_MODEL;
 const recheck = process.argv.includes('--recheck');
-const only = arg('only')?.split(',').map((s) => s.trim()) as CategoryName[] | undefined;
+const only = arg('only')?.split(',').map((s) => s.trim()) as BankCategoryName[] | undefined;
 const unknown = only?.filter((c) => !CATEGORY_NAMES.includes(c)) ?? [];
 if (unknown.length) throw new Error(`Unknown category: ${unknown.join(', ')}`);
 
@@ -121,7 +121,7 @@ function writeAtomic(file: string, text: string) {
 
 function save() {
   const order = (q: BankQuestion) =>
-    CATEGORY_NAMES.indexOf(q.category) * 10 + DIFFICULTIES.indexOf(q.difficulty);
+    CATEGORY_NAMES.indexOf(q.category as BankCategoryName) * 10 + DIFFICULTIES.indexOf(q.difficulty);
   bank.questions.sort((a, b) => order(a) - order(b) || a.id.localeCompare(b.id));
   bank.meta = {
     spentUsd: Math.round(bank.meta.spentUsd * 1e6) / 1e6,
@@ -135,7 +135,7 @@ function save() {
   writeAtomic(PENDING_PATH, `[\n${pending.map((q) => `  ${JSON.stringify(q)}`).join(',\n')}\n]\n`);
 }
 
-const count = (category: CategoryName, difficulty: Difficulty) =>
+const count = (category: BankCategoryName, difficulty: Difficulty) =>
   bank.questions.filter((q) => q.category === category && q.difficulty === difficulty).length;
 /** Worst-case cost of the requests in flight right now. */
 let reserved = 0;
@@ -231,14 +231,14 @@ async function check(apiKey: string, items: BankQuestion[]): Promise<number> {
   const ids = new Set(items.map((q) => q.id));
   pending = pending.filter((q) => !ids.has(q.id));
   const { category, difficulty } = items[0];
-  const room = Math.max(0, target - count(category, difficulty));
+  const room = Math.max(0, target - count(category as BankCategoryName, difficulty));
   bank.questions.push(...approved.slice(0, room));
   save();
   return Math.min(approved.length, room);
 }
 
 /** One batch for one category and level: write (saved as pending), then check. */
-async function batch(apiKey: string, category: CategoryName, difficulty: Difficulty) {
+async function batch(apiKey: string, category: BankCategoryName, difficulty: Difficulty) {
   const own = [...bank.questions, ...pending].filter((q) => q.category === category);
   const avoid = [
     ...own.filter((q) => q.difficulty === difficulty).slice(-AVOID_SAME_LEVEL),

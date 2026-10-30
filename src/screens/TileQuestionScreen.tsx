@@ -19,6 +19,8 @@ import { WIDE_MIN } from './BoardScreen';
 
 type TileQuestionScreenProps = {
   tile: Tile;
+  /** The player's topic, shown instead of «صمم فئتك». */
+  customTopic: string | null;
   /** One question; a stable array so the game engine is not reset on re-render. */
   questions: PlayableQuestion[];
   teams: [Team, Team];
@@ -31,7 +33,15 @@ type TileQuestionScreenProps = {
  * One board tile. The team in turn taps an answer (right = the tile's points), or the host
  * shows the answer. The host can pause or restart the clock and fix either team's score.
  */
-export function TileQuestionScreen({ tile, questions, teams, turn, onAdjust, onDone }: TileQuestionScreenProps) {
+export function TileQuestionScreen({
+  tile,
+  customTopic,
+  questions,
+  teams,
+  turn,
+  onAdjust,
+  onDone,
+}: TileQuestionScreenProps) {
   const game = useTriviaGame(questions, { autoAdvance: false });
   const { state, remainingMs, paused, canUseFiftyFifty } = game;
   const { width } = useWindowDimensions();
@@ -45,7 +55,9 @@ export function TileQuestionScreen({ tile, questions, teams, turn, onAdjust, onD
   const topBar = (
     <View style={styles.topBar}>
       <View style={styles.tilePill}>
-        <Text style={styles.tileCategory}>{getCategory(tile.category).label}</Text>
+        <Text style={styles.tileCategory}>
+          {tile.category === 'Custom' ? `✦ ${customTopic ?? getCategory(tile.category).label}` : getCategory(tile.category).label}
+        </Text>
         <Text style={styles.tilePoints}>
           {tile.points} نقطة · {DIFFICULTY_LABELS[tile.difficulty]}
         </Text>

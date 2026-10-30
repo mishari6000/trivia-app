@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { CategoryTile } from '../components/CategoryTile';
+import { CustomCategoryCard } from '../components/CustomCategoryCard';
 import { GameTitle } from '../components/GameTitle';
 import { InfoBanner } from '../components/InfoBanner';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { boardCategories, countQuestions } from '../data/bank';
+import { generateCustom, hasCustom, loadCustom, type SavedCustom } from '../data/customCategory';
 import { BOARD_CATEGORIES } from '../game/board';
 import { QUESTION_TIME_MS } from '../game/gameReducer';
 import { colors, fonts, radius, spacing } from '../theme/theme';
@@ -15,7 +17,7 @@ import type { CategoryName } from '../types/question';
 type SetupScreenProps = {
   initialCategories: CategoryName[];
   initialNames: [string, string];
-  onStart: (categories: CategoryName[], teamNames: [string, string]) => void;
+  onStart: (categories: CategoryName[], teamNames: [string, string], custom: SavedCustom | null) => void;
 };
 
 export const DEFAULT_TEAM_NAMES: [string, string] = ['الفريق الأول', 'الفريق الثاني'];
@@ -29,8 +31,30 @@ function pairs<T>(items: T[]): T[][] {
 export function SetupScreen({ initialCategories, initialNames, onStart }: SetupScreenProps) {
   const [picked, setPicked] = useState<CategoryName[]>(initialCategories);
   const [names, setNames] = useState<[string, string]>(initialNames);
+  const [custom, setCustom] = useState<SavedCustom | null>(null);
   const list = boardCategories();
   const full = picked.length === BOARD_CATEGORIES;
+  // «صمم فئتك» counts only once its five questions exist on this device.
+  const customReady = custom !== null && hasCustom(custom);
+  const ready = full && (!picked.includes('Custom') || customReady);
+
+  useEffect(() => {
+    let alive = true;
+    loadCustom().then((saved) => alive && setCustom(saved));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const generate = async (topic: string) => {
+    if (!custom) return;
+    const next = await generateCustom(topic, custom);
+    setCustom(next);
+    // Picked straight away when there is room for it.
+    setPicked((current) =>
+      current.includes('Custom') || current.length >= BOARD_CATEGORIES ? current : ['Custom', ...current],
+    );
+  };
 
   const toggle = (name: CategoryName) =>
     setPicked((current) =>
@@ -43,7 +67,7 @@ export function SetupScreen({ initialCategories, initialNames, onStart }: SetupS
   const setName = (team: 0 | 1, value: string) =>
     setNames((current) => (team === 0 ? [value, current[1]] : [current[0], value]));
   const start = () =>
-    onStart(picked, [names[0].trim() || DEFAULT_TEAM_NAMES[0], names[1].trim() || DEFAULT_TEAM_NAMES[1]]);
+    onStart(picked, [names[0].trim() || DEFAULT_TEAM_NAMES[0], names[1].trim() || DEFAULT_TEAM_NAMES[1]], custom);
 
   return (
     <ScreenLayout
@@ -84,6 +108,13 @@ export function SetupScreen({ initialCategories, initialNames, onStart }: SetupS
       <Text style={styles.section} accessibilityRole="header">
         اختار {BOARD_CATEGORIES} فئات · {picked.length}/{BOARD_CATEGORIES}
       </Text>
+      <CustomCategoryCard
+        saved={custom}
+        order={picked.includes('Custom') ? picked.indexOf('Custom') + 1 : null}
+        disabled={full && !picked.includes('Custom')}
+        onToggle={() => toggle('Custom')}
+        onGenerate={generate}
+      />
       <View style={styles.grid}>
         {pairs(list).map((row) => (
           <View key={row[0].name} style={styles.row}>
@@ -108,8 +139,8 @@ export function SetupScreen({ initialCategories, initialNames, onStart }: SetupS
       </View>
 
       <PrimaryButton
-        label={full ? 'ابدأ اللعبة' : `باقي ${BOARD_CATEGORIES - picked.length} من الفئات`}
-        disabled={!full}
+        label={ready ? 'ابدأ اللعبة' : `باقي ${BOARD_CATEGORIES - picked.length} من الفئات`}
+        disabled={!ready}
         onPress={start}
       />
     </ScreenLayout>
