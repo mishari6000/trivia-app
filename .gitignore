@@ -43,3 +43,6 @@ intro/out/
 
 # Written but not yet fact-checked questions (scripts/generate-questions.mts)
 scripts/pending-questions.json
+
+# Screen recordings for submissions
+recordings/
